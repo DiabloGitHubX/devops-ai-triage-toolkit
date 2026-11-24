@@ -1,0 +1,35 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Kubernetes credentials
+.kube/
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+*.key
+*.pem
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Testing and linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Generated runtime artifacts
+.runtime/
+artifacts/
+
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
