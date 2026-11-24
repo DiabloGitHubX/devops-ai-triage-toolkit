@@ -1,0 +1,52 @@
+2026-11-24T08:00:01Z [INFO] Job: build-1423
+2026-11-24T08:00:01Z [INFO] Workflow: payments-api-ci
+2026-11-24T08:00:01Z [INFO] Branch: feature/payment-validation
+2026-11-24T08:00:02Z [INFO] Runner: ubuntu-latest
+
+2026-11-24T08:00:03Z [INFO] Checking out repository
+2026-11-24T08:00:05Z [INFO] Repository checkout completed
+
+2026-11-24T08:00:06Z [INFO] Setting up Python 3.12
+2026-11-24T08:00:09Z [INFO] Python environment ready
+
+2026-11-24T08:00:10Z [INFO] Installing dependencies
+2026-11-24T08:00:14Z [INFO] Successfully installed project dependencies
+
+2026-11-24T08:00:15Z [INFO] Running lint checks
+2026-11-24T08:00:16Z [INFO] All lint checks passed
+
+2026-11-24T08:00:17Z [INFO] Running unit tests
+$ python -m pytest tests/ -v --tb=short
+
+============================= test session starts =============================
+platform linux -- Python 3.12.10, pytest-8.3.5
+collected 6 items
+
+tests/test_health.py::test_health_endpoint PASSED
+tests/test_payments.py::test_valid_payment PASSED
+tests/test_payments.py::test_zero_amount_rejected PASSED
+tests/test_payments.py::test_missing_currency_rejected PASSED
+tests/test_payments.py::test_negative_amount_rejected FAILED
+tests/test_payments.py::test_payment_response_schema PASSED
+
+================================== FAILURES ===================================
+________________________ test_negative_amount_rejected ________________________
+
+tests/test_payments.py:42: in test_negative_amount_rejected
+    assert response.status_code == 400
+E   assert 201 == 400
+E    +  where 201 = response.status_code
+
+Captured application log:
+INFO payments-api: Received payment request amount=-50 currency=USD
+INFO payments-api: Payment accepted
+
+=========================== short test summary info ===========================
+FAILED tests/test_payments.py::test_negative_amount_rejected
+========================= 1 failed, 5 passed in 0.84s ==========================
+
+2026-11-24T08:00:19Z [ERROR] Unit test stage failed
+2026-11-24T08:00:19Z [INFO] Docker build stage skipped
+2026-11-24T08:00:19Z [INFO] Deployment stage skipped
+2026-11-24T08:00:20Z [ERROR] Process completed with exit code 1
+2026-11-24T08:00:20Z [INFO] Job conclusion: FAILURE

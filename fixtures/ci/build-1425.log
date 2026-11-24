@@ -1,0 +1,66 @@
+2026-11-24T10:30:01Z [INFO] Job: build-1425
+2026-11-24T10:30:01Z [INFO] Workflow: analytics-worker-ci
+2026-11-24T10:30:01Z [INFO] Branch: feature/helm-resources
+2026-11-24T10:30:02Z [INFO] Runner: ubuntu-latest
+
+2026-11-24T10:30:03Z [INFO] Checking out repository
+2026-11-24T10:30:05Z [INFO] Repository checkout completed
+
+2026-11-24T10:30:06Z [INFO] Running unit tests
+
+$ python -m pytest tests/ -q
+........
+8 passed in 0.67s
+
+2026-11-24T10:30:08Z [INFO] Building container image
+2026-11-24T10:30:24Z [INFO] Container image built successfully
+
+2026-11-24T10:30:25Z [INFO] Setting up Helm
+2026-11-24T10:30:27Z [INFO] Helm installation completed
+
+2026-11-24T10:30:28Z [INFO] Validating Helm chart
+
+$ helm lint charts/analytics-worker \
+    -f charts/analytics-worker/values-staging.yaml
+
+==> Linting charts/analytics-worker
+[INFO] Chart.yaml: icon is recommended
+[ERROR] templates/: template: analytics-worker/templates/deployment.yaml:30:32:
+executing "analytics-worker/templates/deployment.yaml" at
+<.Values.resources.requests.memory>:
+nil pointer evaluating interface {}.memory
+
+Error: 1 chart(s) linted, 1 chart(s) failed
+
+2026-11-24T10:30:29Z [INFO] Collecting chart diagnostics
+
+$ sed -n '28,34p' charts/analytics-worker/templates/deployment.yaml
+
+          resources:
+            requests:
+              memory: {{ .Values.resources.requests.memory | quote }}
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+            limits:
+              memory: {{ .Values.resources.limits.memory | quote }}
+              cpu: {{ .Values.resources.limits.cpu | quote }}
+
+$ cat charts/analytics-worker/values.yaml
+
+replicaCount: 1
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+$ cat charts/analytics-worker/values-staging.yaml
+
+replicaCount: 2
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+2026-11-24T10:30:30Z [ERROR] Helm validation stage failed
+2026-11-24T10:30:30Z [INFO] Deployment stage skipped
+2026-11-24T10:30:31Z [ERROR] Process completed with exit code 1
+2026-11-24T10:30:31Z [INFO] Job conclusion: FAILURE

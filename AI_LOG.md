@@ -196,3 +196,35 @@ These observations will inform the MCP server implementation and troubleshooting
 - Fresh-cluster infrastructure provisioning completed in 47.293 seconds.
 
 The measured provisioning time was obtained on a development machine with a previously downloaded kind node image. It does not represent a completely cold installation or the complete AI agent demonstration.
+
+## Phase 3 — CI/CD Failure Fixtures
+
+### AI-assisted tasks
+
+- Generated three synthetic CI/CD failure logs representing
+  application testing, Docker build configuration, and Helm
+  deployment validation failures.
+- Designed fixtures containing realistic diagnostic evidence
+  and pipeline stage information.
+
+### Manual execution and verification
+
+- Created and inspected all three fixture files.
+- Verified job identifiers, failure messages, file encoding,
+  and failed job conclusions.
+- Normalized fixture line endings to LF.
+
+### AI-generated issues and corrections
+
+- The initial Helm fixture reported a missing CPU value,
+  although the preceding memory expression would fail first.
+  The reported error was corrected to match the template.
+
+### Limitations
+
+The fixtures are synthetic and were not collected from actual
+CI/CD pipeline executions. They provide controlled,
+reproducible inputs for evaluating the triage agent.
+
+Expected diagnoses will be maintained separately from the
+agent's runtime context to avoid evaluation answer leakage.

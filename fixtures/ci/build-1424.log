@@ -1,0 +1,77 @@
+2026-11-24T09:15:01Z [INFO] Job: build-1424
+2026-11-24T09:15:01Z [INFO] Workflow: orders-api-ci
+2026-11-24T09:15:01Z [INFO] Branch: feature/container-build
+2026-11-24T09:15:02Z [INFO] Runner: ubuntu-latest
+
+2026-11-24T09:15:03Z [INFO] Checking out repository
+2026-11-24T09:15:05Z [INFO] Repository checkout completed
+
+2026-11-24T09:15:06Z [INFO] Installing test dependencies
+2026-11-24T09:15:10Z [INFO] Running unit tests
+
+$ python -m pytest tests/ -q
+............
+12 passed in 1.24s
+
+2026-11-24T09:15:12Z [INFO] Setting up Docker Buildx
+2026-11-24T09:15:15Z [INFO] Docker Buildx initialized
+
+2026-11-24T09:15:16Z [INFO] Building container image
+
+$ docker buildx build --load \
+    -f services/orders-api/Dockerfile \
+    -t orders-api:build-1424 \
+    .
+
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 312B done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.12-slim
+#2 DONE 0.8s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 102B done
+#3 DONE 0.0s
+
+#4 [internal] load build context
+#4 transferring context: 24.61kB done
+#4 DONE 0.1s
+
+#5 [1/5] FROM docker.io/library/python:3.12-slim
+#5 DONE 0.0s
+
+#6 [2/5] WORKDIR /app
+#6 CACHED
+
+#7 [3/5] COPY requirements.txt .
+#7 ERROR: failed to calculate checksum: "/requirements.txt": not found
+
+------
+ > [3/5] COPY requirements.txt .:
+------
+
+Dockerfile:5
+--------------------
+   3 | WORKDIR /app
+   4 |
+   5 | >>> COPY requirements.txt .
+   6 | RUN pip install --no-cache-dir -r requirements.txt
+   7 | COPY . .
+--------------------
+
+ERROR: failed to solve: failed to compute cache key:
+failed to calculate checksum: "/requirements.txt": not found
+
+2026-11-24T09:15:18Z [INFO] Collecting build diagnostics
+
+$ find . -name requirements.txt
+./services/orders-api/requirements.txt
+
+2026-11-24T09:15:19Z [ERROR] Docker build stage failed
+2026-11-24T09:15:19Z [INFO] Image push stage skipped
+2026-11-24T09:15:19Z [INFO] Deployment stage skipped
+2026-11-24T09:15:20Z [ERROR] Process completed with exit code 1
+2026-11-24T09:15:20Z [INFO] Job conclusion: FAILURE
