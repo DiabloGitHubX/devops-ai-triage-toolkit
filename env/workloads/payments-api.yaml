@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-api
+  namespace: staging
+  labels:
+    app.kubernetes.io/name: payments-api
+    app.kubernetes.io/part-of: devops-ai-triage-toolkit
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: payments-api
+
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: payments-api
+        app.kubernetes.io/part-of: devops-ai-triage-toolkit
+
+    spec:
+      automountServiceAccountToken: false
+
+      containers:
+        - name: payments-api
+          image: nginx:triage-nonexistent-tag
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - name: http
+              containerPort: 80
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

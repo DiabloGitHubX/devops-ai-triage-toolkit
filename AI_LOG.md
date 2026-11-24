@@ -144,3 +144,55 @@
 - End-to-end diagnostic accuracy remains unverified.
 - The individual cause of the previous unexpected tool
   behavior was not isolated.
+
+
+## Phase 2 — Kubernetes Environment and Security
+
+### AI-assisted tasks
+
+- Designed the local Kubernetes environment using kind.
+- Generated declarative Kubernetes manifests for three intentionally broken workloads.
+- Designed namespace-scoped RBAC using a dedicated ServiceAccount, Role, and RoleBinding.
+- Implemented Bash scripts for environment provisioning, restricted kubeconfig generation, and cleanup.
+- Implemented Makefile targets for environment management.
+- Suggested security validation and reproducibility tests.
+
+### Manual execution and verification
+
+- Created and inspected the kind cluster locally.
+- Verified the Kubernetes node image and pinned its digest.
+- Applied Kubernetes manifests and inspected actual pod states, logs, and events.
+- Verified the root causes of all three intentionally broken workloads.
+- Tested RBAC permissions through ServiceAccount impersonation.
+- Generated temporary ServiceAccount credentials and independently verified authentication using the restricted kubeconfig.
+- Confirmed that unauthorized Kubernetes operations were denied.
+- Verified that generated credentials were excluded from Git.
+- Executed the setup script repeatedly to verify idempotency.
+- Deleted and recreated the environment to validate reproducibility.
+
+### AI-generated issues and corrections
+
+1. The initial setup script treated unsuccessful authorization commands as successful permission denials. This could incorrectly accept authentication or connectivity failures. The implementation was corrected to validate both the authorization response and its exit status.
+
+2. An initial verification command suggested using `kubectl get pods -w` with the restricted ServiceAccount. The ServiceAccount intentionally does not have watch permissions. The verification procedure was corrected to use bounded polling instead of expanding RBAC permissions.
+
+3. The credential generation script uses Unix-style file permission controls. During Windows testing, Git Bash displayed the generated kubeconfig with broader permissions than expected. Git exclusion was verified, but equivalent NTFS access restrictions were not independently validated.
+
+### Observed Kubernetes behavior
+
+- Pod phase alone is insufficient for diagnosing container health.
+- A repeatedly crashing container may alternate between Error and CrashLoopBackOff.
+- Previous container logs may be unavailable even when current logs contain sufficient diagnostic evidence.
+- Kubernetes scheduling events provide useful evidence for diagnosing unscheduled pods.
+
+These observations will inform the MCP server implementation and troubleshooting skill.
+
+### Verified results
+
+- All three intended workload root causes were reproduced.
+- All 20 automated authorization checks passed.
+- Actual API requests for Secrets and pods in unauthorized namespaces were rejected.
+- Environment cleanup preserved unrelated Docker containers and local configuration.
+- Fresh-cluster infrastructure provisioning completed in 47.293 seconds.
+
+The measured provisioning time was obtained on a development machine with a previously downloaded kind node image. It does not represent a completely cold installation or the complete AI agent demonstration.

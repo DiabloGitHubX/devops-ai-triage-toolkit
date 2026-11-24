@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: triage-reader
+  namespace: staging
+  labels:
+    app.kubernetes.io/part-of: devops-ai-triage-toolkit
+automountServiceAccountToken: false
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: triage-reader
+  namespace: staging
+  labels:
+    app.kubernetes.io/part-of: devops-ai-triage-toolkit
+
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+
+  - apiGroups:
+      - ""
+    resources:
+      - pods/log
+    verbs:
+      - get
+
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - list
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: triage-reader
+  namespace: staging
+  labels:
+    app.kubernetes.io/part-of: devops-ai-triage-toolkit
+
+subjects:
+  - kind: ServiceAccount
+    name: triage-reader
+    namespace: staging
+
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: triage-reader
