@@ -31,8 +31,8 @@ test:
 	$(PYTHON) -m pytest -q
 
 lint:
-	$(PYTHON) -m ruff check common/ mcp-server/ scripts/mcp_smoke_test.py
-	$(PYTHON) -m ruff format --check common/ mcp-server/ scripts/mcp_smoke_test.py
+	$(PYTHON) -m ruff check common/ mcp-server/ scripts/mcp_smoke_test.py skills/k8s-triage/scripts/
+	$(PYTHON) -m ruff format --check common/ mcp-server/ scripts/mcp_smoke_test.py skills/k8s-triage/scripts/
 
 clean:
 	bash scripts/cleanup.sh

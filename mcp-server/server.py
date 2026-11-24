@@ -3,7 +3,14 @@
 import logging
 import sys
 from collections.abc import Callable
+from pathlib import Path
 from typing import Annotated, Any
+
+# Support direct execution of the MCP server from the repository.
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from ci_tools import CIToolError, CITools
 from config import (

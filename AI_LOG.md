@@ -388,3 +388,75 @@ SDK validation errors may echo invalid input values. Real diagnostic logs may co
 The skipped symbolic link test requires verification in an environment supporting symbolic link creation.
 
 LLM diagnostic accuracy has not yet been evaluated. These results validate the diagnostic infrastructure and security controls, not the quality of future agent-generated diagnoses.
+
+
+## Phase 6 — Diagnostic Skill and Deterministic CI Helper
+
+### Tasks delegated to AI
+
+- Drafting the Kubernetes and CI diagnostic Skill.
+- Defining activation criteria, diagnostic branches, evidence requirements, safety instructions, and confidence levels.
+- Optimizing the Skill to satisfy the assignment's line-count restriction.
+- Refactoring CI failure extraction into a shared Python module.
+- Designing the standalone CI extraction CLI.
+- Generating structural Skill tests and standalone helper regression tests.
+- Reviewing actual test failures and recommending corrections.
+
+### Human implementation and verification
+
+The generated files were reviewed and implemented locally using VS Code. Compilation, formatting, regression tests, standalone CLI tests, and live MCP integration checks were executed locally.
+
+The shared extraction implementation was compared against the original MCP implementation before refactoring. All three CI fixtures and six additional edge cases produced identical results.
+
+The MCP server was subsequently verified through the official MCP client to ensure the shared module remained accessible during standalone stdio execution.
+
+### AI-generated issues and corrections
+
+**1. Skill exceeded the assignment's line limit**
+
+The initial AI-generated Skill contained 376 lines, exceeding the requirement of fewer than 300 lines.
+
+The structural validation detected the violation. The Skill was rewritten to consolidate overlapping instructions while retaining the required diagnostic branches, safety rules, and output format.
+
+The final Skill contains 228 lines and 1,599 words.
+
+**2. Unnecessary lint suppression directives**
+
+The AI initially recommended suppressing Ruff E402 for entry-point import-path initialization. The project's Ruff configuration did not enable E402, resulting in unused suppression errors.
+
+The unnecessary directives were removed and import ordering was corrected without weakening the existing lint configuration.
+
+**3. Windows newline handling in a regression test**
+
+An AI-generated test initially failed because Python text-mode file writing converted LF line endings into CRLF on Windows, while the helper correctly preserved the original file content.
+
+After reviewing the actual pytest failure, the test was corrected to write explicit UTF-8 bytes and parameterized to cover both LF and CRLF.
+
+Both newline variants passed. The production extraction algorithm remained unchanged.
+
+### Design decisions
+
+The MCP server and offline helper share one deterministic extraction implementation rather than maintaining duplicate algorithms.
+
+The offline helper is intentionally available to human operators only. It accepts an explicit local file path, whereas the agent must use the MCP tool with restricted fixture access.
+
+The Skill is generic and does not embed evaluation answers or fixture-specific root causes.
+
+Structural Skill validation and deterministic helper testing are kept separate from LLM behavioral evaluation to avoid overstating the demonstrated diagnostic accuracy.
+
+### Verified results
+
+- Skill size: 228 lines, below the mandatory 300-line limit.
+- Skill structural tests: 22 passed.
+- Standalone helper tests: 13 passed.
+- Complete regression suite: 422 passed, 1 skipped.
+- Regression suite execution time: 15.17 seconds.
+- Ruff linting: all checks passed.
+- Ruff formatting: 22 files correctly formatted.
+- Live MCP integration: all checks passed.
+- Dependency consistency: no broken requirements.
+- CI extraction: 195 original source lines reduced to 97 selected lines across three fixtures.
+
+The skipped test concerns symbolic-link creation restrictions on the Windows platform or account.
+
+No LLM-based diagnostic success rate was measured during this phase. Agent integration and behavioral evaluation remain separate implementation phases.
