@@ -228,3 +228,77 @@ reproducible inputs for evaluating the triage agent.
 
 Expected diagnoses will be maintained separately from the
 agent's runtime context to avoid evaluation answer leakage.
+
+## Phase 4 — MCP Diagnostic Server Implementation
+
+### Tasks Delegated to AI
+
+- Proposed the MCP server architecture and separation of responsibilities.
+- Designed the five diagnostic tool contracts.
+- Generated initial configuration and input validation implementations.
+- Implemented Kubernetes diagnostic operations using the official Python client.
+- Implemented deterministic CI failure extraction and bounded fixture retrieval.
+- Implemented FastMCP tool registration, descriptions, annotations and error handling.
+- Generated a reusable MCP protocol integration test.
+- Assisted with troubleshooting, code quality checks and documentation.
+
+### Human Execution and Verification
+
+- Installed and verified the required Python dependencies.
+- Confirmed SDK imports and supported function signatures.
+- Executed Kubernetes operations against the live kind cluster using restricted credentials.
+- Verified namespace isolation and Kubernetes RBAC behavior.
+- Executed configuration, safety and CI diagnostic smoke tests.
+- Applied Ruff corrections and formatting.
+- Executed the real MCP integration test and subsequent regression test.
+- Reviewed actual command outputs before progressing.
+
+### AI-Generated Issues and Corrections
+
+**Datetime compatibility and exception handling**
+
+The initial Kubernetes implementation used `timezone.utc` and broad exception handling. Ruff identified modernization and exception-handling violations.
+
+The implementation was corrected to use `datetime.UTC`, specific expected exceptions and a `finally` block to release partially initialized Kubernetes clients.
+
+An intentional broad exception boundary remains in the MCP server to prevent unexpected internal errors from being exposed to clients.
+
+**Nested asynchronous context managers**
+
+The generated MCP smoke test initially used nested asynchronous context managers. Ruff reported two SIM117 violations.
+
+Both were corrected, and the complete integration test was executed again successfully.
+
+**Pod phase interpretation**
+
+Live verification demonstrated that a crashing workload may report the Kubernetes pod phase as `Running` while its container is unhealthy.
+
+The diagnostic implementation therefore exposes container states, readiness, restart counts and previous termination information instead of relying exclusively on pod phase.
+
+### Observed Verification Results
+
+- Configuration and safety smoke tests: 45/45 passed.
+- Live Kubernetes diagnostic operations: passed.
+- CI diagnostic smoke tests: passed.
+- MCP tool discovery: 5/5 tools.
+- MCP invocation: all five tools successfully invoked.
+- Invalid MCP requests: 8/8 rejected.
+- CI availability without Kubernetes credentials: passed.
+- MCP integration regression test: passed.
+- Python syntax, Ruff linting, formatting and dependency checks: passed.
+
+CI failure extraction selected 97 of 195 original fixture lines, approximately a 50.3% reduction, while preserving the expected failure markers.
+
+The response truncation test returned an 810-byte serialized payload under a configured 1,024-byte limit.
+
+### Remaining Limitations and Follow-Up
+
+- Formal pytest coverage is required for safety controls and failure paths.
+- Kubeconfig contents should be validated before SDK credential loading.
+- MCP input coercion and schema constraints require additional testing.
+- LLM credentials should be further isolated from the MCP server.
+- Server-side cleanup execution requires independent verification.
+- Logs and events must be treated as untrusted diagnostic data.
+- No LLM diagnosis or agent evaluation has been performed during this phase.
+
+All reported results are based on locally executed commands and observed outputs. No agent evaluation results have been fabricated.
