@@ -10,3 +10,8 @@ Dockerfile text eol=lf
 
 # CI log fixtures
 *.log text eol=lf
+
+*.ini text eol=lf
+*.txt text eol=lf
+.env*.example text eol=lf
+.gitattributes text eol=lf

@@ -460,3 +460,360 @@ Structural Skill validation and deterministic helper testing are kept separate f
 The skipped test concerns symbolic-link creation restrictions on the Windows platform or account.
 
 No LLM-based diagnostic success rate was measured during this phase. Agent integration and behavioral evaluation remain separate implementation phases.
+
+## Phase 7 — Bounded AI Diagnostic Agent and Live Integration
+
+### Tasks Delegated to AI
+
+AI assistance was used extensively during the design and implementation of the diagnostic agent.
+
+Delegated tasks included:
+
+- Designing the agent architecture and separation of responsibilities.
+- Implementing validated, environment-driven agent configuration.
+- Implementing the official MCP client integration using stdio transport.
+- Converting discovered MCP tool schemas into LLM-compatible function definitions.
+- Implementing the asynchronous OpenAI-compatible LLM client.
+- Preserving provider-specific tool-call metadata during conversation replay.
+- Designing the bounded iterative investigation loop.
+- Implementing tool allowlisting, argument validation, duplicate-call detection and execution budgets.
+- Implementing structured JSON execution tracing.
+- Implementing the command-line interface and client lifecycle management.
+- Generating automated regression tests and integration verification commands.
+- Reviewing live diagnostic outputs and identifying weaknesses in generated recommendations.
+- Assisting with troubleshooting, documentation and implementation corrections.
+
+The AI generated substantial portions of the implementation and test suite. The developer remained responsible for reviewing the proposed changes, applying them locally, executing verification commands and approving implementation decisions.
+
+### Human Implementation and Verification
+
+The developer implemented the proposed files locally using VS Code and executed all verification commands in the local Python virtual environment.
+
+Verification included:
+
+- Python dependency installation and consistency checks.
+- Configuration validation using synthetic credentials and the actual local configuration.
+- Automated tests using mocked LLM and MCP clients.
+- Real MCP protocol communication through the official MCP SDK.
+- Live Kubernetes diagnostics using the restricted ServiceAccount kubeconfig.
+- Real Gemini API requests.
+- Review of generated diagnoses against known workload failures and CI fixture contents.
+- Inspection of structured execution traces and reported token usage.
+- Verification of CLI exit codes and incomplete investigation behavior.
+- Ruff linting, formatting and strict pytest warning validation.
+
+The developer reviewed actual execution results before progressing to subsequent implementation steps.
+
+### Architecture and Design Decisions
+
+**Custom bounded agent loop**
+
+A custom iterative agent loop was selected instead of a larger agent orchestration framework.
+
+This provides explicit control over tool execution, validation, token accounting, termination conditions, error handling and observability while keeping the implementation understandable and reviewable.
+
+The agent communicates with the MCP server through the official MCP protocol over stdio. It does not import or directly execute the server's diagnostic tool implementations.
+
+**Provider compatibility**
+
+The OpenAI-compatible Python SDK was retained, with the Gemini API configured through environment variables.
+
+The selected development model is `gemini-3.5-flash-lite`. Both the provider endpoint and model identifier remain configurable.
+
+Provider-specific metadata is preserved when replaying assistant messages, including Gemini thought signatures attached to tool calls.
+
+**Defense in depth**
+
+Security enforcement does not depend exclusively on the diagnostic Skill or model instructions.
+
+The agent validates discovered tools against an explicit inventory of five diagnostic tools, validates requested arguments against their schemas, rejects unsupported tool requests and prevents identical repeated tool invocations.
+
+The MCP server independently validates requests and enforces namespace restrictions and bounded diagnostic responses.
+
+Kubernetes authorization is additionally enforced by the dedicated ServiceAccount and namespace-scoped RBAC.
+
+The agent has no registered remediation, shell execution or Kubernetes mutation tools.
+
+**Execution budgets**
+
+Investigations are bounded by configurable limits:
+
+| Configuration | Default |
+|---|---:|
+| Maximum tool attempts | 10 |
+| Maximum LLM requests | 12 |
+| Investigation token budget | 30,000 |
+| Maximum output tokens per LLM request | 2,048 |
+| LLM request timeout | 60 seconds |
+| MCP request timeout | 45 seconds |
+| Investigation runtime budget | 300 seconds |
+
+The token budget combines provider-reported token consumption with a conservative pre-request prompt-size estimate.
+
+The estimate is not an exact provider tokenizer and does not constitute a guaranteed billing limit. Failed requests may also consume tokens without returning usage metadata.
+
+The agent marks token accounting as incomplete when reliable provider usage information is unavailable.
+
+**Structured observability**
+
+Structured JSON execution tracing was implemented as an optional assignment enhancement.
+
+Trace events include investigation identifiers, tool names, predefined diagnostic purposes, execution durations, request outcomes, token accounting, budget configuration and termination reasons.
+
+The trace intentionally excludes raw prompts, tool arguments, diagnostic payloads, API keys and provider exception messages.
+
+Trace purposes describe the intended diagnostic function of each tool rather than exposing private model reasoning.
+
+The structured agent trace is emitted to standard error, while the diagnosis is emitted to standard output. MCP subprocess messages may also appear on standard error and are not necessarily structured JSON.
+
+### Issues Identified and Corrected
+
+**1. Unexpected provider tool requests during finalization**
+
+Earlier function-calling validation demonstrated that the model could request additional tools despite receiving `tool_choice="none"`.
+
+The agent implementation therefore uses explicit finalization instructions and omits tool definitions entirely when performing a tool-free finalization request.
+
+The agent also validates unexpected tool requests and does not execute tools outside its registered inventory.
+
+Regression tests verify that tool-free finalization omits both the `tools` and `tool_choice` request parameters.
+
+This behavior was verified with the selected Gemini model. It is not a guarantee that every compatible provider or future model version will behave identically.
+
+**2. Provider-specific conversation metadata**
+
+The implementation preserves the complete serialized assistant message when replaying conversation history.
+
+This avoids discarding provider-specific metadata, including Gemini thought signatures associated with function calls.
+
+Automated tests verify metadata preservation across the tool-calling and finalization sequence.
+
+**3. Test implementation and integration issues**
+
+During agent development, the AI-generated test suite required several corrections.
+
+These included Windows newline handling, malformed SDK model serialization warnings, duplicated test helper logic and Ruff violations associated with test organization.
+
+Shared test helpers were consolidated, malformed response validation was moved ahead of serialization, and platform-dependent test assumptions were corrected.
+
+The complete regression suite was subsequently executed with warnings treated as errors.
+
+**4. Live LLM provider failures**
+
+The initial live investigation of `payments-api` successfully collected Kubernetes evidence through MCP but failed during a subsequent LLM request.
+
+A controlled manual retry completed the investigation successfully.
+
+A later `orders-api` investigation returned HTTP 503 after successfully collecting diagnostic evidence.
+
+The original provider error handling exposed a generic failure category, which made troubleshooting unnecessarily difficult.
+
+The LLM client and structured trace implementation were enhanced to preserve sanitized error categories and validated HTTP status codes.
+
+Provider error categories now distinguish authentication failures, rate limits, timeouts, connection failures, HTTP errors and invalid responses.
+
+Raw provider exception messages are not included in the structured trace.
+
+The agent does not automatically retry failed provider requests. This avoids hidden request amplification and unpredictable additional token consumption.
+
+Manual retries performed during development were recorded as separate investigation attempts.
+
+**5. Token budget exhaustion**
+
+The initial default investigation budget was 20,000 tokens.
+
+During live investigation of `orders-api`, the agent successfully invoked three diagnostic tools but stopped because the estimated remaining token budget was insufficient for another model request.
+
+The provider had reported 13,441 consumed tokens at that point.
+
+The difference between reported consumption and the configured budget was not necessarily sufficient for another request because conversation history, the diagnostic Skill, tool definitions and collected evidence contribute to subsequent prompt size.
+
+A temporary 30,000-token budget was tested.
+
+After an unrelated HTTP 503 provider failure and a controlled retry, the investigation completed successfully with 19,435 reported tokens.
+
+The `analytics-worker` investigation also completed under the increased budget.
+
+Based on these observations, the default token budget was increased from 20,000 to 30,000 in the agent configuration and public environment template.
+
+The private local configuration was updated without displaying or modifying the API key.
+
+Environment-variable overrides remain supported. The tool-attempt, LLM-request, output-token and runtime limits were retained.
+
+The selected budget is an empirical development default, not a guarantee that all future investigations will complete within it.
+
+**6. Windows CLI output encoding**
+
+A failed investigation exposed a Windows output encoding issue when the diagnosis was redirected to a file.
+
+The Unicode em dash in the incomplete diagnosis was not preserved correctly under the active Windows encoding.
+
+The CLI was updated to configure standard output and standard error explicitly as UTF-8 when the streams support reconfiguration.
+
+A safe error-handling mode was also configured for output encoding.
+
+The correction was verified through redirected output and automated regression tests.
+
+**7. Remediation recommendation quality**
+
+An early successful `payments-api` investigation correctly identified the invalid container image tag but recommended using `nginx:latest`.
+
+Although this could resolve the immediate image-pull failure, it is not an appropriate default recommendation for reproducible deployment management.
+
+The diagnostic Skill was strengthened to:
+
+- Prefer source-controlled declarative configuration changes.
+- Avoid recommending mutable `latest` image tags.
+- Require verified image versions or digests where possible.
+- Distinguish observed evidence from inferred root causes.
+- Use placeholders for unavailable Secret names and configuration values.
+- Avoid inventing credentials or unsupported application requirements.
+- Maintain consistency between Kubernetes resource requests and limits.
+- Prefer changes to the owning workload rather than individual generated pods.
+- Include read-only verification suggestions.
+- Preserve the meaning of quoted diagnostic evidence.
+
+The updated Skill contains 251 lines and remains below the assignment's mandatory 300-line limit.
+
+The Skill improvements guide model behavior but do not guarantee that every generated recommendation will satisfy all requirements.
+
+### Live Integration Demonstrations
+
+Live integration testing used the actual Gemini API, the official MCP client, the MCP diagnostic server and the restricted Kubernetes environment.
+
+The following table records all eight live investigation attempts conducted during this phase.
+
+| Scenario | Token budget | Outcome | Reported tokens |
+|---|---:|---|---:|
+| CI build-1423 | 20,000 | Completed | 7,917 |
+| payments-api | 20,000 | Provider failure | 7,311* |
+| payments-api retry | 20,000 | Completed | 12,452 |
+| orders-api | 20,000 | Estimated token budget exhausted | 13,441 |
+| orders-api | 30,000 | HTTP 503 provider failure | 19,141* |
+| orders-api retry | 30,000 | Completed | 19,435 |
+| analytics-worker | 30,000 | Completed | 17,986 |
+| CI build-1424 natural-language query | 30,000 | Completed | 8,546 |
+
+\* Token accounting was incomplete because the failed provider request did not return usage information.
+
+#### Successfully demonstrated root causes
+
+| Scenario | Observed diagnosis |
+|---|---|
+| payments-api | ImagePullBackOff caused by an invalid container image tag. |
+| orders-api | Repeated container failure caused by the missing `DATABASE_URL` environment variable. |
+| analytics-worker | Pending workload caused by an unsatisfiable CPU request of 100 CPU cores. |
+| CI build-1423 | Application validation defect allowing negative payment amounts. |
+| CI build-1424 | Incorrect Docker build context preventing access to `requirements.txt`. |
+
+The Kubernetes investigations collected evidence from the live cluster. The CI investigations used synthetic but realistic failure fixtures.
+
+All three mandatory Kubernetes scenarios and at least one CI scenario were successfully demonstrated.
+
+Both explicit CLI investigation modes and natural-language input were exercised.
+
+#### Integration completion statistics
+
+- Distinct scenarios successfully demonstrated: 5 of 5.
+- Total investigation attempts: 8.
+- Completed investigations: 5.
+- Incomplete investigations: 3.
+- First-attempt completion: 3 of 5 scenarios (60%).
+- Overall attempt completion: 5 of 8 attempts (62.5%).
+- Total reported token usage across successful investigations: 66,336.
+- Mean reported token usage across successful investigations: 13,267.2 tokens.
+
+These statistics describe development integration attempts, not formal diagnostic accuracy.
+
+The attempts used different token budgets and included implementation and Skill changes between runs. Successful retries were not substituted for unsuccessful attempts.
+
+Formal evaluation will be performed separately using predefined expected root causes and a consistent agent configuration.
+
+#### Manual review of diagnosis quality
+
+The completed investigations identified the intended root causes during manual review.
+
+However, completion does not imply that every generated recommendation was optimal.
+
+Observed weaknesses included:
+
+- An early recommendation to use a mutable image tag.
+- Illustrative payment validation code that did not fully establish the application's intended handling of zero-valued payments.
+- Kubernetes remediation examples containing unnecessary configuration or assumptions about existing Secrets.
+- Resource recommendations that require workload-specific sizing before production use.
+- A Docker build-context diagnosis that identified the correct cause but did not provide the complete corrected build command.
+
+These observations will inform the formal evaluation criteria and future improvements.
+
+Exact evidence quotation fidelity was not independently audited for every generated response during these integration demonstrations.
+
+No suggested remediation was executed by the agent.
+
+### Automated Regression Hardening
+
+Following live integration testing, additional regression cases were introduced to cover the newly identified failure modes.
+
+The additional coverage focused on:
+
+- Sanitized LLM error categories.
+- HTTP status metadata validation.
+- Provider failure trace events.
+- Incomplete token accounting.
+- Rejection of unsupported error metadata.
+- UTF-8 output configuration.
+- Compatibility with output streams that do not support reconfiguration.
+
+The existing test coverage was preserved.
+
+The default token budget was also verified through configuration regression tests, including environment-variable override behavior.
+
+### Verified Results
+
+| Verification | Observed result |
+|---|---|
+| Configuration regression tests | 62 passed |
+| Targeted regression tests | 275 passed |
+| Complete agent test suite | 479 passed |
+| Complete project regression suite | 901 passed, 1 skipped |
+| Additional hardening test cases | 43 |
+| Complete regression execution time | 20.70 seconds |
+| Strict pytest warning validation | Passed |
+| Ruff linting | Passed |
+| Ruff formatting | 39 files compliant |
+| Python dependency consistency | No broken requirements |
+| Git whitespace validation | Passed |
+| Live MCP integration | Passed |
+| Private `.env` Git exclusion | Verified |
+
+The single skipped test concerns symbolic-link creation, which is unavailable on the current Windows platform or account.
+
+This is a previously documented environment limitation rather than a newly introduced regression.
+
+The actual symbolic-link test remains to be verified in an environment that supports symbolic-link creation.
+
+All reported results were obtained from locally executed commands and observed outputs.
+
+### Remaining Limitations
+
+- LLM output remains nondeterministic, and provider availability can affect investigation completion.
+- Prompt token estimation is approximate and cannot guarantee an exact monetary spending limit.
+- Provider failures may leave token accounting incomplete.
+- Structural validation of the diagnosis does not establish factual correctness.
+- A successful CLI exit code does not independently prove that the root cause or remediation is correct.
+- The agent does not independently validate every quoted evidence line against the original diagnostic payload.
+- The Skill cannot guarantee that every generated remediation recommendation follows all instructions.
+- Diagnostic logs and events may contain sensitive information. Structured trace minimization does not constitute complete diagnostic data redaction.
+- MCP credential minimization does not provide complete operating-system process isolation.
+- The real symbolic-link test remains unverified on the current Windows environment.
+- Containerized agent execution and clean-machine end-to-end reproducibility remain to be verified.
+- Formal behavioral evaluation has not yet been completed.
+
+### Next Steps
+
+The next implementation phase will introduce a reproducible evaluation harness with predefined expected root causes, consistent configuration, recorded investigation outcomes and transparent pass-rate reporting.
+
+Evaluation answers must remain separate from the agent's runtime context.
+
+Failed investigations, incorrect diagnoses and incomplete results must remain visible in the evaluation report.
+
+Subsequent work will address containerized execution, final documentation and end-to-end reproducibility verification.

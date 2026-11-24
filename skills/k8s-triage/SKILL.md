@@ -34,6 +34,8 @@ Do not activate for:
 - Never fabricate evidence, tool results, or resource names.
 - Respect execution and token budgets.
 - Report unknown root cause when evidence is insufficient.
+- Prefer reproducible, declarative configuration changes over temporary manual fixes.
+- Never claim that a proposed fix has been executed, tested, or validated.
 
 ## Available MCP Tools
 
@@ -64,6 +66,7 @@ Use exact pod and container names returned by tools. Do not invent unsupported a
 - Call describe_pod for each relevant unhealthy pod.
 - Inspect readiness, restart counts, current and previous states, conditions, and events.
 - Do not rely exclusively on pod phase: Running can contain crashing or unready containers.
+- Identify the owning workload when ownership information is available. Prefer correcting the workload configuration rather than an individual managed pod.
 
 ### CI Entry Point
 
@@ -85,8 +88,16 @@ Use exact pod and container names returned by tools. Do not invent unsupported a
 - Unauthorized, authentication required, or access denied: investigate registry authentication or permissions.
 - DNS errors or connection failures: investigate registry connectivity.
 - Generic ImagePullBackOff without a specific error: root cause unknown.
+- A suspicious image tag alone does not establish that the tag is unavailable.
 
-**Suggested fix:** Correct the image reference, configure an appropriate imagePullSecrets reference, or investigate registry connectivity according to the evidence. Do not invent a valid image tag or credential.
+**Suggested fix:** Correct the image reference, configure an appropriate imagePullSecrets reference, or investigate registry connectivity according to the evidence.
+
+- Prefer an explicitly versioned image or verified immutable digest.
+- Never recommend the latest tag or an unpinned image as the default remediation.
+- Do not invent or claim that a replacement image tag exists.
+- If a valid replacement is not established by evidence, use a clearly labeled placeholder such as `<verified-version-tag>`.
+- Recommend verifying the replacement image in the registry before deployment.
+- Prefer updating the owning workload's declarative manifest.
 
 Application logs may be unavailable because the container has not started.
 
@@ -109,6 +120,8 @@ Application logs may be unavailable because the container has not started.
 - Nonzero exit code without explanatory evidence: root cause unknown.
 
 **Suggested fix:** Recommend the identified configuration or application correction. Use Secret references for sensitive configuration without claiming that an unverified Secret exists. Restarting a pod is not a permanent root cause fix.
+
+When proposing a Secret reference, clearly label unknown Secret names and keys as placeholders. Never include actual or invented credential values.
 
 ### Branch C: OOMKilled
 
@@ -139,11 +152,13 @@ Application logs may be unavailable because the container has not started.
 
 **Suggested fix:** Review excessive resource requests, legitimate capacity requirements, placement constraints, or storage configuration according to the evidence. Do not invent node capacity or claim access to node metrics.
 
+When proposing resource adjustments, keep requests and limits consistent. Clearly label unmeasured resource values as illustrative and recommend validating workload requirements.
+
 ### Branch E: Unknown or Multiple Failures
 
 Inspect available container states, conditions, logs, and events. Keep independent symptoms and their evidence separate. Report unknown root cause when evidence remains insufficient.
 
-For multiple unhealthy workloads, investigate and report each workload separately within the available budget.
+For multiple unhealthy workloads, investigate and report each workload separately within the available budget. Explicitly identify targets that could not be investigated.
 
 ## CI Diagnostic Runbook
 
@@ -156,6 +171,8 @@ Distinguish primary failures from downstream skipped stages and summary messages
 **Investigate:** Identify the failed test, expected versus actual behavior, relevant application logs, and assertion details. Determine whether evidence supports an application defect or a test problem.
 
 **Suggested fix:** Recommend correcting application behavior when supported by evidence. Do not change test expectations merely to make tests pass or invent unavailable source code.
+
+Label proposed application code as illustrative when the actual implementation is unavailable. Keep validation conditions, error messages, and expected behavior consistent. Do not infer additional business requirements from a single test.
 
 ### Branch B: Build or Infrastructure Failure
 
@@ -176,6 +193,8 @@ Distinguish primary failures from downstream skipped stages and summary messages
 ## Evidence Quality and Stopping Rules
 
 - Quote relevant evidence from actual tool responses and identify its tool and target.
+- Preserve the meaning of quoted evidence; do not reconstruct missing error messages.
+- Distinguish directly observed facts from diagnostic inference.
 - Redact sensitive values if they appear in diagnostic evidence.
 - Check truncated, source_may_be_truncated, and scan_complete indicators when present.
 - Do not interpret omitted evidence as evidence of absence.
@@ -204,6 +223,10 @@ Explain the cause supported by evidence. If the exact cause cannot be establishe
 ### Suggested fix
 
 Provide a specific command or YAML change when supported by evidence. Clearly label placeholders, assumptions, and illustrative values. Never execute the fix.
+
+Prefer declarative, reproducible changes to the owning workload or source configuration. Use the correct resource structure when presenting YAML fragments and identify where the change belongs.
+
+Recommend a read-only verification step when useful, without claiming it has been performed.
 
 If the root cause is unknown, recommend the next diagnostic action instead of inventing remediation.
 

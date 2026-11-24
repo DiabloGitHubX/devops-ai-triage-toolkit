@@ -1,2 +1,4 @@
 openai==3.58.0
 python-dotenv==1.2.4
+mcp==1.30.0
+jsonschema==4.26.0
