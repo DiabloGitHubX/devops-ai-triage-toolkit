@@ -3,19 +3,30 @@
 import logging
 import sys
 from collections.abc import Callable
-from typing import Any
+from typing import Annotated, Any
 
 from ci_tools import CIToolError, CITools
-from config import ConfigurationError, load_settings
+from config import (
+    DEFAULT_LOG_TAIL,
+    MAX_LOG_TAIL,
+    ConfigurationError,
+    load_settings,
+)
 from kubernetes_tools import KubernetesToolError, KubernetesTools
 from mcp.server.fastmcp import FastMCP
 from mcp.server.fastmcp.exceptions import ToolError
 from mcp.types import ToolAnnotations
-from safety import SafetyError
+from pydantic import Field, StrictBool, StrictInt, StrictStr
+from safety import SafetyError, validate_namespace
 
 logger = logging.getLogger(__name__)
 
 SERVER_NAME = "devops-ai-triage-toolkit"
+
+LogTailLines = Annotated[
+    StrictInt,
+    Field(ge=1, le=MAX_LOG_TAIL),
+]
 
 SERVER_INSTRUCTIONS = """
 This server provides read-only Kubernetes and CI diagnostics.
@@ -73,10 +84,19 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
     ci_tools = CITools(settings)
     kubernetes_tools: KubernetesTools | None = None
 
-    def get_kubernetes_tools() -> KubernetesTools:
-        """Initialize restricted Kubernetes access on demand."""
+    def get_kubernetes_tools(
+        namespace: str,
+    ) -> KubernetesTools:
+        """Authorize the namespace before initializing Kubernetes access."""
 
         nonlocal kubernetes_tools
+
+        # Reject unauthorized namespaces before loading credentials
+        # or initiating any Kubernetes API connection.
+        validate_namespace(
+            namespace,
+            settings.allowed_namespaces,
+        )
 
         if kubernetes_tools is None:
             kubernetes_tools = KubernetesTools(settings)
@@ -146,8 +166,8 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
         annotations=READ_ONLY_ANNOTATIONS,
     )
     def list_pods(
-        namespace: str,
-        label_selector: str | None = None,
+        namespace: StrictStr,
+        label_selector: StrictStr | None = None,
     ) -> dict[str, Any]:
         """List pods and identify unhealthy Kubernetes workloads.
 
@@ -167,7 +187,7 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
 
         return invoke(
             "list_pods",
-            lambda: get_kubernetes_tools().list_pods(
+            lambda: get_kubernetes_tools(namespace).list_pods(
                 namespace=namespace,
                 label_selector=label_selector,
             ),
@@ -177,8 +197,8 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
         annotations=READ_ONLY_ANNOTATIONS,
     )
     def describe_pod(
-        namespace: str,
-        pod_name: str,
+        namespace: StrictStr,
+        pod_name: StrictStr,
     ) -> dict[str, Any]:
         """Inspect a pod to collect evidence about its failure.
 
@@ -199,7 +219,7 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
 
         return invoke(
             "describe_pod",
-            lambda: get_kubernetes_tools().describe_pod(
+            lambda: get_kubernetes_tools(namespace).describe_pod(
                 namespace=namespace,
                 pod_name=pod_name,
             ),
@@ -209,11 +229,11 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
         annotations=READ_ONLY_ANNOTATIONS,
     )
     def get_pod_logs(
-        namespace: str,
-        pod_name: str,
-        container: str | None = None,
-        tail_lines: int = 100,
-        previous: bool = False,
+        namespace: StrictStr,
+        pod_name: StrictStr,
+        container: StrictStr | None = None,
+        tail_lines: LogTailLines = DEFAULT_LOG_TAIL,
+        previous: StrictBool = False,
     ) -> dict[str, Any]:
         """Retrieve bounded logs from a Kubernetes container.
 
@@ -238,7 +258,7 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
 
         return invoke(
             "get_pod_logs",
-            lambda: get_kubernetes_tools().get_pod_logs(
+            lambda: get_kubernetes_tools(namespace).get_pod_logs(
                 namespace=namespace,
                 pod_name=pod_name,
                 container=container,
@@ -251,8 +271,8 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
         annotations=READ_ONLY_ANNOTATIONS,
     )
     def list_events(
-        namespace: str,
-        involved_object: str | None = None,
+        namespace: StrictStr,
+        involved_object: StrictStr | None = None,
     ) -> dict[str, Any]:
         """List recent Kubernetes Normal and Warning events.
 
@@ -272,7 +292,7 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
 
         return invoke(
             "list_events",
-            lambda: get_kubernetes_tools().list_events(
+            lambda: get_kubernetes_tools(namespace).list_events(
                 namespace=namespace,
                 involved_object=involved_object,
             ),
@@ -282,8 +302,8 @@ def create_server() -> tuple[FastMCP, Callable[[], None]]:
         annotations=READ_ONLY_ANNOTATIONS,
     )
     def get_ci_log(
-        job_id: str,
-        failing_section_only: bool = False,
+        job_id: StrictStr,
+        failing_section_only: StrictBool = False,
     ) -> dict[str, Any]:
         """Retrieve diagnostic evidence from a local CI job log.
 

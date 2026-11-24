@@ -212,3 +212,121 @@ These measurements describe synthetic fixture processing, not measured LLM token
 - Kubeconfig pre-validation and stricter MCP boundary validation require additional hardening.
 - MCP client session closure has been verified, but server-side cleanup execution has not yet been independently confirmed.
 - The AI agent, triage skill and formal automated test suite are not yet implemented.
+
+
+## Security Hardening and Automated Testing
+
+The diagnostic platform implements defense in depth across the MCP protocol, application validation, credential handling and Kubernetes authorization.
+
+### Security Controls
+
+| Layer | Control |
+|---|---|
+| MCP tool interface | Read-only diagnostic tools with no mutation capabilities |
+| Protocol validation | Strict argument types, required fields and bounded log requests |
+| Namespace authorization | Configurable allowlist checked before Kubernetes initialization |
+| Credential validation | Explicit, token-only kubeconfig with a single cluster, user and context |
+| Transport security | HTTPS endpoint and embedded certificate authority validation |
+| Identity verification | Kubernetes SelfSubjectReview verifies the expected ServiceAccount identity |
+| Kubernetes authorization | Dedicated namespace-scoped Role and RoleBinding |
+| Filesystem access | CI job identifier validation and fixture directory containment |
+| Resource protection | Bounded output, file sizes, event scans and request timeouts |
+| Credential separation | Dedicated agent and MCP configuration files |
+| Subprocess environment | Explicit allowlist of supported MCP configuration variables |
+
+The MCP server does not fall back to the default administrative kubeconfig. Unsupported authentication mechanisms, including executable credential plugins, external token files and client certificate authentication, are rejected before Kubernetes client initialization.
+
+### Configuration Separation
+
+Create local configuration files from the committed templates:
+
+```bash
+cp .env.example .env
+cp .env.mcp.example .env.mcp
+```
+
+The `.env` file contains LLM provider configuration and agent execution limits.
+
+The `.env.mcp` file contains namespace authorization, restricted kubeconfig location, CI fixture location and diagnostic safety limits.
+
+Configure the LLM API key privately in `.env`. Never commit API keys or generated Kubernetes credentials.
+
+MCP configuration precedence:
+
+1. Explicit environment variables.
+2. Dedicated `.env.mcp` configuration.
+3. Application defaults.
+
+The MCP configuration loader does not read the agent's `.env` file. Variable interpolation is disabled.
+
+The shared MCP subprocess launcher forwards only explicitly supported diagnostic configuration variables. The official MCP SDK may additionally provide its standard operating-system environment variables.
+
+### Automated Tests
+
+Install the development dependencies:
+
+```bash
+python -m pip install -r mcp-server/requirements-dev.txt
+```
+
+Run the automated test suite:
+
+```bash
+make test
+```
+
+Run static analysis and formatting checks:
+
+```bash
+make lint
+```
+
+The automated suite does not require a running Kubernetes cluster, Docker or an LLM API key. Kubernetes interactions are mocked where appropriate, while protocol boundary tests launch real MCP server subprocesses.
+
+### Verified Test Results
+
+| Category | Passed | Skipped |
+|---|---:|---:|
+| Configuration and fixtures | 4 | 0 |
+| Namespace and input validation | 102 | 0 |
+| Output truncation | 66 | 0 |
+| CI diagnostic security | 59 | 1 |
+| Mocked Kubernetes API | 46 | 0 |
+| Kubeconfig security | 78 | 0 |
+| MCP protocol validation | 5 | 0 |
+| Credential isolation | 27 | 0 |
+| Total | 387 | 1 |
+
+Observed execution result on the development machine:
+
+```text
+387 passed, 1 skipped in 14.33s
+```
+
+The skipped test requires symbolic link creation, which was unavailable under the Windows development environment. A deterministic mocked path-containment test passed, but it does not replace verification using a real symbolic link.
+
+### Live MCP Regression Testing
+
+With the local Kubernetes environment running:
+
+```bash
+make mcp-smoke
+```
+
+Verified results:
+
+- All five MCP tools were discovered and invoked successfully through the official MCP client.
+- Diagnostic evidence was retrieved for all three intentionally unhealthy workloads.
+- All three CI failure fixtures were accessible.
+- Unauthorized namespace requests and malformed arguments were rejected.
+- CI diagnostics remained operational without Kubernetes credentials.
+- Both MCP client sessions closed successfully.
+
+### Security Limitations
+
+- Credential separation and subprocess environment minimization are not operating-system sandboxing. Processes running under the same OS identity may access files available to that identity.
+- The restricted kubeconfig contains a bearer token and must be protected using appropriate filesystem permissions. POSIX-style permission commands do not necessarily enforce equivalent Windows NTFS access controls.
+- Kubernetes logs and CI fixtures may contain sensitive information. Read-only access does not guarantee that diagnostic data is safe to disclose.
+- SDK-generated validation errors may echo invalid argument values. Credentials must never be supplied as tool arguments.
+- Diagnostic output is bounded, so incomplete evidence must be acknowledged rather than treated as proof of a root cause.
+- The automated test results measure software behavior and security controls, not LLM diagnostic accuracy. Agent accuracy will be evaluated separately.

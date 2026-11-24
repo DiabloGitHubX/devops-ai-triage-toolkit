@@ -2,8 +2,6 @@
 
 import asyncio
 import json
-import os
-import sys
 from datetime import timedelta
 from pathlib import Path
 from typing import Any
@@ -11,8 +9,18 @@ from typing import Any
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+from common.mcp_process import build_server_parameters
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SERVER_PATH = PROJECT_ROOT / "mcp-server" / "server.py"
+
+
+def server_parameters(
+    overrides: dict[str, str] | None = None,
+) -> StdioServerParameters:
+    """Configure a separate MCP server subprocess."""
+
+    return build_server_parameters(overrides)
+
 
 EXPECTED_TOOLS = {
     "list_pods",
@@ -23,34 +31,6 @@ EXPECTED_TOOLS = {
 }
 
 TOOL_TIMEOUT = timedelta(seconds=45)
-
-
-def server_parameters(
-    overrides: dict[str, str] | None = None,
-) -> StdioServerParameters:
-    """Configure a separate MCP server subprocess."""
-
-    environment = {
-        key: value
-        for key, value in os.environ.items()
-        if key
-        not in {
-            "LLM_API_KEY",
-            "OPENAI_API_KEY",
-            "GEMINI_API_KEY",
-            "GOOGLE_API_KEY",
-        }
-    }
-
-    if overrides:
-        environment.update(overrides)
-
-    return StdioServerParameters(
-        command=sys.executable,
-        args=[str(SERVER_PATH)],
-        cwd=str(PROJECT_ROOT),
-        env=environment,
-    )
 
 
 def result_payload(result: Any) -> dict[str, Any]:

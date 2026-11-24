@@ -4,6 +4,10 @@ from datetime import UTC, datetime
 from typing import Any
 
 from config import DEFAULT_LOG_TAIL, Settings
+from credentials import (
+    CredentialError,
+    load_restricted_kubeconfig,
+)
 from kubernetes import client
 from kubernetes import config as kube_config
 from kubernetes.client.exceptions import ApiException
@@ -225,29 +229,38 @@ class KubernetesTools:
             self.core_api = self._connect()
 
     def _connect(self) -> client.CoreV1Api:
-        """Load explicit credentials and verify ServiceAccount identity."""
-
-        if not self.settings.kubeconfig_path.is_file():
-            raise KubernetesToolError(
-                "Restricted kubeconfig is missing. Run make env or make kubeconfig."
-            )
+        """Validate credentials and verify ServiceAccount identity."""
 
         connected = False
 
         try:
-            self._api_client = kube_config.new_client_from_config(
-                config_file=str(self.settings.kubeconfig_path),
+            # Validate the restricted kubeconfig before the SDK
+            # processes any authentication configuration.
+            validated_config = load_restricted_kubeconfig(
+                path=self.settings.kubeconfig_path,
+                expected_context=self.settings.kubeconfig_context,
+                allowed_namespaces=self.settings.allowed_namespaces,
+            )
+
+            # Load the validated dictionary directly instead of
+            # reopening the original kubeconfig file.
+            self._api_client = kube_config.new_client_from_config_dict(
+                config_dict=validated_config,
                 context=self.settings.kubeconfig_context,
                 persist_config=False,
             )
 
             configuration = self._api_client.configuration
 
+            # Defense in depth: verify that TLS validation
+            # remains enabled after SDK initialization.
             if not configuration.verify_ssl:
                 raise KubernetesToolError(
                     "Insecure Kubernetes TLS configuration rejected."
                 )
 
+            # Verify the authenticated identity before allowing
+            # any Kubernetes diagnostic operations.
             auth_api = client.AuthenticationV1Api(self._api_client)
 
             review = auth_api.create_self_subject_review(
@@ -284,10 +297,18 @@ class KubernetesTools:
 
             return core_api
 
+        except CredentialError as exc:
+            raise KubernetesToolError(str(exc)) from None
+
         except ApiException as exc:
             raise _api_error(exc) from None
 
-        except (ConfigException, HTTPError, OSError, ValueError):
+        except (
+            ConfigException,
+            HTTPError,
+            OSError,
+            ValueError,
+        ):
             raise KubernetesToolError(
                 "Unable to initialize restricted Kubernetes access. "
                 "Check credentials, context and cluster connectivity."

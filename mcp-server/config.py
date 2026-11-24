@@ -86,9 +86,15 @@ def _resolve_path(value: str) -> Path:
 
 
 def load_settings() -> Settings:
-    """Load configuration without modifying process environment."""
+    """Load dedicated MCP configuration without modifying process environment."""
 
-    file_values = dotenv_values(PROJECT_ROOT / ".env")
+    # Keep MCP configuration separate from agent credentials.
+    # Disable interpolation to prevent references to unrelated
+    # environment variables from being automatically resolved.
+    file_values = dotenv_values(
+        PROJECT_ROOT / ".env.mcp",
+        interpolate=False,
+    )
 
     def get(name: str, default: str) -> str:
         if name in os.environ:

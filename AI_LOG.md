@@ -302,3 +302,89 @@ The response truncation test returned an 810-byte serialized payload under a con
 - No LLM diagnosis or agent evaluation has been performed during this phase.
 
 All reported results are based on locally executed commands and observed outputs. No agent evaluation results have been fabricated.
+
+
+## Phase 5 — Automated Testing and Security Hardening
+
+### Tasks Delegated to AI
+
+AI assistance was used to design the automated testing strategy, generate pytest fixtures and test cases, review the MCP security boundaries, implement restricted kubeconfig validation, strengthen protocol argument validation and separate agent credentials from MCP configuration.
+
+AI also assisted with regression commands, documentation and debugging integration failures.
+
+### Human Execution and Verification
+
+The developer implemented the proposed changes locally, reviewed configuration and source code, executed automated tests and inspected actual MCP protocol responses.
+
+All reported test results were obtained from local command execution. No successful test outcomes were fabricated or inferred solely from generated code.
+
+### Issues Identified and Corrected
+
+**1. Credential validation before Kubernetes client initialization**
+
+The initial Kubernetes client implementation loaded kubeconfig directly through the Kubernetes SDK before verifying the authenticated identity.
+
+Review identified that unsupported authentication mechanisms could be processed before identity verification.
+
+The implementation was changed to validate a restricted, token-only kubeconfig structure before passing a reconstructed configuration dictionary to the Kubernetes SDK.
+
+Automated tests verified rejection of executable credential plugins, unsupported authentication fields, insecure TLS configuration, unauthorized namespaces and unexpected authenticated identities.
+
+**2. Argument coercion at the MCP protocol boundary**
+
+An isolated Pydantic experiment demonstrated that standard integer and boolean annotations accepted incorrectly typed values through automatic coercion.
+
+Strict Pydantic types and explicit numeric constraints were introduced. The actual MCP protocol was then tested to confirm that malformed arguments were rejected before credential initialization.
+
+**3. Namespace authorization order**
+
+The previous lazy initialization flow could initialize the Kubernetes client before rejecting an unauthorized namespace.
+
+Namespace authorization was moved ahead of credential loading and Kubernetes connectivity.
+
+Protocol tests using a deliberately nonexistent kubeconfig verified that unauthorized namespace requests returned allowlist errors rather than credential initialization errors.
+
+**4. Credential separation**
+
+The MCP configuration loader previously read the same environment file used by the LLM agent.
+
+Agent and MCP configuration were separated into `.env` and `.env.mcp`. A shared subprocess launcher was introduced to forward only explicitly supported MCP configuration variables.
+
+The existing LLM API key and configuration values were preserved during migration without displaying credential values.
+
+**5. Duplicate function definitions during integration**
+
+During integration of the shared MCP launcher, obsolete `server_parameters()` implementations remained in both the smoke test and protocol validation test files.
+
+Python syntax validation succeeded because duplicate function definitions are syntactically valid. However, the automated regression suite reported five failures, and Ruff reported eight linting errors.
+
+The later obsolete function definitions replaced the new implementations at runtime and referenced imports that had already been removed.
+
+The issue was corrected by removing the obsolete definitions while preserving the new shared launcher and existing test assertions.
+
+The complete regression suite and live MCP integration tests subsequently passed.
+
+This incident demonstrated why syntax validation alone is insufficient and why AI-assisted changes must be verified through linting, automated tests and integration testing.
+
+### Verified Results
+
+- 387 automated tests passed.
+- One symbolic link test was skipped because symbolic link creation was unavailable in the Windows development environment.
+- Zero automated test failures remained.
+- Complete pytest execution time: 14.33 seconds.
+- All 18 Python files in the linting scope passed formatting checks.
+- Ruff linting passed.
+- Dependency consistency checks passed.
+- All five MCP tools remained operational through the official MCP protocol.
+- CI diagnostics remained available without Kubernetes credentials.
+- Local configuration and generated Kubernetes credentials remained excluded from Git.
+
+### Remaining Limitations
+
+Credential minimization is not complete process isolation. The MCP SDK may supply standard operating-system environment variables, and processes sharing the same OS identity may access the same filesystem.
+
+SDK validation errors may echo invalid input values. Real diagnostic logs may contain sensitive information.
+
+The skipped symbolic link test requires verification in an environment supporting symbolic link creation.
+
+LLM diagnostic accuracy has not yet been evaluated. These results validate the diagnostic infrastructure and security controls, not the quality of future agent-generated diagnoses.
