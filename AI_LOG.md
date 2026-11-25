@@ -1243,3 +1243,165 @@ No failed formal evaluation case was replaced, removed, or rerun to improve the 
 - Pin the container base image and lock transitive dependencies for stronger reproducibility.
 
 The current implementation remains a local, read-only diagnostic toolkit rather than a production remediation system.
+---
+
+## Phase 10 - Final documentation and reproducibility verification
+
+### Objective
+
+Prepare the final submission documentation and verify
+that the implementation can be reproduced independently
+of the original development environment.
+
+### AI-assisted work
+
+AI assistance was used to:
+
+- Review assignment requirements against the implementation.
+- Draft the final README and architecture documentation.
+- Document setup, configuration, security controls,
+  evaluation results and known limitations.
+- Generate documentation validation scripts.
+- Design an isolated fresh-checkout verification procedure.
+- Generate environment inspection and cleanup scripts.
+- Interpret Kubernetes container states, logs and events.
+- Review the final reproducibility evidence.
+
+### Operator execution and verification
+
+The operator executed the verification commands locally
+and supplied their actual output for inspection.
+
+The following were verified:
+
+- Fresh GitHub checkout at implementation commit 03654bd.
+- Independent Python 3.12.10 virtual environment.
+- Successful dependency installation and pip consistency check.
+- Successful runtime imports and CLI initialization.
+- Six valid evaluation cases.
+- Separate kind cluster and administrative kubeconfig.
+- Newly generated restricted ServiceAccount credentials.
+- All three intentional Kubernetes workload failures.
+- All 20 RBAC permission checks.
+- All five MCP tools through the official MCP protocol.
+- Eight MCP security rejection checks.
+- CI tool availability without Kubernetes credentials.
+- Cleanup of the isolated verification environment.
+
+### Verification issue and correction
+
+The initial failure-state polling procedure did not
+correctly identify the orders-api failure because its
+pod phase remained Running while its container repeatedly
+terminated.
+
+The polling procedure was stopped and the workload
+was inspected using container states, termination
+reasons, restart counts, events and logs.
+
+The inspection established:
+
+- The container terminated with exit code 1.
+- The container was not ready.
+- Kubernetes recorded repeated restarts and BackOff events.
+- Current logs explicitly reported that DATABASE_URL
+  was not configured.
+- Previous logs were unavailable during one inspection.
+
+This was a verification-script issue rather than a
+failure of the deployed application fixture or MCP server.
+
+No application or infrastructure implementation changes
+were necessary.
+
+### Measured results
+
+- GitHub clone and dependency installation: 61 seconds.
+- Control-plane readiness reported by kind: 16 seconds.
+- MCP protocol integration tests: 8 seconds.
+- Complete provisioning duration: not recorded.
+- RBAC validation: 20/20 passed.
+- MCP security rejection checks: 8/8 passed.
+- Verification environment cleanup: passed.
+
+The verification reused existing host prerequisites
+and available package and node image caches. It must
+not be represented as a completely cold-machine benchmark.
+
+### Evidence integrity
+
+No additional live LLM requests were executed.
+
+The formal evaluation was not rerun, rescored or modified.
+
+The original evaluation and container verification
+evidence remained unchanged.
+
+The original Kubernetes context, node identity, pod
+identities, restricted credential fingerprints and
+Docker image identity were verified after cleanup.
+
+The temporary checkout, virtual environment, cluster
+and generated credentials were removed.
+
+### Final regression and security audit
+
+The final implementation validation completed in 54 seconds.
+
+Results:
+
+- Automated regression tests: 1,219 passed, 1 skipped,
+  zero failures, in 20.51 seconds.
+- The skipped symbolic-link test reflects the current
+  Windows platform or account permissions.
+- Python dependency consistency: passed.
+- Ruff linting and formatting: passed, 52 formatted files.
+- Bash syntax and Makefile target validation: passed.
+- Evaluation dataset validation: six valid cases.
+- Restricted Kubernetes authentication: passed.
+- RBAC permission checks: 20/20 passed.
+- MCP protocol integration and security checks: passed.
+- Hardened non-root container CLI: passed.
+- Triage Skill: 251 lines, required diagnosis headings present.
+
+The final repository security audit examined 110 tracked
+working-tree files and 145 reachable Git history blobs.
+
+The scan checked the current LLM API key, both current
+restricted ServiceAccount tokens, prohibited runtime paths,
+and common credential patterns.
+
+No matching credentials or configured secret patterns
+were detected. The public API key template was empty.
+
+The scan is limited to the current credentials and
+configured detection patterns; it is not a comprehensive
+guarantee that every possible secret format is absent.
+
+### Evidence integrity audit correction
+
+The initial evidence audit incorrectly required raw-byte
+equality for ordinary Markdown documentation.
+
+A subsequent read-only investigation established:
+
+- Total evidence files inspected: 30.
+- Exact byte matches: 28.
+- Line-ending differences only: 2.
+- Actual content differences: 0.
+- Protected original artifacts: 27.
+- Protected artifact mismatches: 0.
+
+The two Markdown documents contained CRLF working-tree
+line endings and LF committed line endings.
+
+Their normalized textual content was identical.
+
+All original formal evaluation artifacts and container
+verification attempt artifacts remained byte-identical.
+
+No evidence files, Git attributes or Git configuration
+were modified to resolve this audit issue.
+
+The formal benchmark was not rerun or rescored.
+No additional live LLM requests were executed.
