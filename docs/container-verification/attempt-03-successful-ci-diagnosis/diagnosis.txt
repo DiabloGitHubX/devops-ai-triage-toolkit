@@ -1,0 +1,47 @@
+### Symptom
+
+CI job `build-1424` failed during the Docker build stage because the Dockerfile attempts to copy a dependency file (`requirements.txt`) from the root build context, but the file is located in a subdirectory (`./services/orders-api/requirements.txt`).
+
+### Evidence
+
+From the CI log for `build-1424` retrieved via `get_ci_log`:
+```text
+#7 [3/5] COPY requirements.txt .
+#7 ERROR: failed to calculate checksum: "/requirements.txt": not found
+
+Dockerfile:5
+--------------------\n   3 | WORKDIR /app
+   4 |
+   5 | >>> COPY requirements.txt .
+   6 | RUN pip install --no-cache-dir -r requirements.txt
+   7 | COPY . .
+--------------------\n
+ERROR: failed to solve: failed to compute cache key:
+failed to calculate checksum: "/requirements.txt": not found
+
+$ find . -name requirements.txt
+./services/orders-api/requirements.txt
+```
+
+### Root cause
+
+The Docker build context or the Dockerfile `COPY` instruction is misconfigured. The Dockerfile expects `requirements.txt` at the root of the build context, but the file actually resides in `./services/orders-api/requirements.txt`. Consequently, Docker cannot locate the file and fails to calculate its checksum during the `COPY` instruction.
+
+### Suggested fix
+
+Update the Dockerfile or the CI build command so that either:
+1. The build context is set to the service directory (`services/orders-api`) where `requirements.txt` is located, OR
+2. The Dockerfile `COPY` instruction is updated to reference the correct relative path from the build context:
+
+```dockerfile
+# Option 2 example:
+COPY services/orders-api/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY services/orders-api/ .
+```
+
+Verify the build context and Dockerfile path alignment locally before triggering a new pipeline run.
+
+### Confidence
+
+- High: Direct evidence from the CI log (`find . -name requirements.txt` and Docker build error `not found`) definitively establishes the path mismatch for `requirements.txt`.

@@ -1,0 +1,5 @@
+[INFO] Agent image: devops-ai-triage-toolkit:local
+[INFO] Docker network: kind
+[INFO] Starting hardened agent container
+Error: Invalid agent configuration or Skill. Check the local configuration against .env.example.
+make: *** [docker-agent] 2 הלקת

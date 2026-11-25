@@ -26,3 +26,6 @@ docs/evaluation/baseline.json -text !eol
 docs/evaluation/results.json -text !eol
 docs/evaluation/report.md -text !eol
 docs/evaluation/cases/** -text !eol whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab
+
+# Preserve original container verification evidence.
+docs/container-verification/attempt-*/** -text !eol whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab

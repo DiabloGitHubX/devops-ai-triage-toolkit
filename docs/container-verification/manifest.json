@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "purpose": "Separate container deployment verification",
+  "model": "gemini-3.5-flash-lite",
+  "image_id": "sha256:5989a42385dd08e8eb7f20dce9bde033994c00c5faeae3a251d839709a7fbcce",
+  "formal_benchmark_included": false,
+  "automatic_retries": false,
+  "attempts": [
+    {
+      "attempt": 1,
+      "source": "20261125T135744Z-006bedc6",
+      "destination": "attempt-01-configuration-failure",
+      "target": "analytics-worker",
+      "completed": false,
+      "result": "configuration_error",
+      "llm_requests": 0,
+      "mcp_calls": 0,
+      "make_exit_code": 2,
+      "wall_time_seconds": 4,
+      "files": {
+        "diagnosis.txt": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "trace.log": {
+          "bytes": 250,
+          "sha256": "ab6c33b40d06b420de4f30d3c37d26d969cc20236516471443a57155ccdfa198"
+        },
+        "make-exit-code.txt": {
+          "bytes": 2,
+          "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+        },
+        "wall-time-seconds.txt": {
+          "bytes": 2,
+          "sha256": "7de1555df0c2700329e815b93b32c571c3ea54dc967b89e81ab73b9972b72d1d"
+        }
+      }
+    },
+    {
+      "attempt": 2,
+      "source": "20261125T140234Z-c94513d5",
+      "destination": "attempt-02-provider-failure",
+      "target": "analytics-worker",
+      "completed": false,
+      "result": "provider_http_503",
+      "llm_requests": 3,
+      "mcp_calls": 2,
+      "make_exit_code": 2,
+      "wall_time_seconds": 19,
+      "files": {
+        "diagnosis.txt": {
+          "bytes": 387,
+          "sha256": "f5f62b2a536905e3514f4369b8f495cb70298b731bb33015e3a30ac358a07ca6"
+        },
+        "trace.log": {
+          "bytes": 4571,
+          "sha256": "9331595f45ca2f9e06824eebbda4935360566436bef80a6c522e9c57d27d00f3"
+        },
+        "make-exit-code.txt": {
+          "bytes": 2,
+          "sha256": "53c234e5e8472b6ac51c1ae1cab3fe06fad053beb8ebfd8977b010655bfdd3c3"
+        },
+        "wall-time-seconds.txt": {
+          "bytes": 3,
+          "sha256": "a9742eb8ee320e006666aef25ae9aeed948247f3125c9cafa7cf97b7e7467dd5"
+        }
+      }
+    },
+    {
+      "attempt": 3,
+      "source": "20261125T140514Z-0bec3813",
+      "destination": "attempt-03-successful-ci-diagnosis",
+      "target": "build-1424",
+      "completed": true,
+      "result": "diagnosis_completed",
+      "llm_requests": 2,
+      "mcp_calls": 1,
+      "make_exit_code": 0,
+      "wall_time_seconds": 17,
+      "files": {
+        "diagnosis.txt": {
+          "bytes": 1963,
+          "sha256": "b9c472b56e40c93d699013f1e221147c6bdf7fd7a2f9a00d00a640de32f16285"
+        },
+        "trace.log": {
+          "bytes": 3023,
+          "sha256": "1bc733eee16edf15e8968cde749d928e109de9fcf0d3e657ad0228e468513e87"
+        },
+        "make-exit-code.txt": {
+          "bytes": 2,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa"
+        },
+        "wall-time-seconds.txt": {
+          "bytes": 3,
+          "sha256": "54183f4323f377b737433a1e98229ead0fdc686f93bab057ecb612daa94002b5"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "attempts": 3,
+    "completed": 1,
+    "incomplete": 2,
+    "llm_requests": 5,
+    "successful_mcp_calls": 3
+  }
+}

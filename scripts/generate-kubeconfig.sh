@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 set -euo pipefail
@@ -10,7 +11,20 @@ ADMIN_CONTEXT="${ADMIN_CONTEXT:-kind-${CLUSTER_NAME}}"
 TRIAGE_NAMESPACE="${TRIAGE_NAMESPACE:-staging}"
 SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-triage-reader}"
 TOKEN_DURATION="${TOKEN_DURATION:-8h}"
-KUBECONFIG_PATH="${KUBECONFIG_PATH:-.runtime/kubeconfig}"
+KUBECONFIG_MODE="${KUBECONFIG_MODE:-host}"
+
+case "$KUBECONFIG_MODE" in
+    host)
+        KUBECONFIG_PATH="${KUBECONFIG_PATH:-.runtime/kubeconfig}"
+        ;;
+    container)
+        KUBECONFIG_PATH="${KUBECONFIG_PATH:-.runtime/kubeconfig.container}"
+        ;;
+    *)
+        echo "[ERROR] KUBECONFIG_MODE must be host or container" >&2
+        exit 1
+        ;;
+esac
 
 umask 077
 
@@ -18,11 +32,25 @@ mkdir -p "$(dirname "$KUBECONFIG_PATH")"
 
 echo "[INFO] Discovering Kubernetes API endpoint"
 
-API_SERVER="$(
-    kubectl --context "$ADMIN_CONTEXT" config view \
-        --minify \
-        -o jsonpath='{.clusters[0].cluster.server}'
-)"
+if [[ "$KUBECONFIG_MODE" == "host" ]]; then
+    API_SERVER="$(
+        kubectl --context "$ADMIN_CONTEXT" config view \
+            --minify \
+            -o jsonpath='{.clusters[0].cluster.server}'
+    )"
+else
+    CONTROL_PLANE="${CLUSTER_NAME}-control-plane"
+
+    if ! docker inspect \
+        --format '{{.State.Running}}' \
+        "$CONTROL_PLANE" | grep -qx true; then
+
+        echo "[ERROR] Kind control plane is not running" >&2
+        exit 1
+    fi
+
+    API_SERVER="https://${CONTROL_PLANE}:6443"
+fi
 
 CA_DATA="$(
     kubectl --context "$ADMIN_CONTEXT" config view \
@@ -87,6 +115,8 @@ mv -f "$TEMP_CONFIG" "$KUBECONFIG_PATH"
 unset TOKEN
 
 echo "[INFO] Restricted kubeconfig generated"
+echo "[INFO] Mode: $KUBECONFIG_MODE"
 echo "[INFO] Path: $KUBECONFIG_PATH"
+echo "[INFO] API endpoint: $API_SERVER"
 echo "[INFO] Namespace: $TRIAGE_NAMESPACE"
 echo "[INFO] Requested token duration: $TOKEN_DURATION"

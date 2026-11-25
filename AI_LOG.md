@@ -1071,3 +1071,175 @@ source equivalence.
 The original baseline and benchmark results were retained.
 No generated diagnosis was edited to satisfy whitespace
 validation, and no evaluation case was retried.
+
+
+---
+
+## Phase 9 — Containerization and Deployment Verification
+
+**Date:** November 25, 2026
+
+### Objective
+
+Package the autonomous diagnostic agent, MCP server, triage Skill, and CI fixtures into a reproducible Docker image while maintaining the project's read-only security model.
+
+### AI Assistance
+
+AI assistance was used to propose and refine:
+
+- A multi-stage Python Dockerfile.
+- An allowlist-based Docker build context.
+- Restricted Kubernetes credential generation for container execution.
+- A hardened Docker execution wrapper.
+- Makefile integration.
+- Offline container security verification.
+- Containerized MCP protocol integration tests.
+- Runtime configuration regression tests.
+- Deployment evidence preservation and documentation.
+
+The proposed implementation was executed and verified locally by the operator. Actual command outputs were supplied for review before proceeding.
+
+### Implementation Decisions
+
+The image uses a Python 3.12 slim base and a dedicated virtual environment for runtime dependencies.
+
+The container runs as a non-root user with UID and GID 10001, a read-only root filesystem, dropped capabilities, no-new-privileges enforcement, and explicit memory, CPU, and process limits.
+
+Development dependencies, test suites, private environment files, local credentials, Git metadata, and historical artifacts are excluded from the image build context.
+
+The MCP server continues to run as a subprocess using the official MCP stdio transport.
+
+The container uses a separately generated restricted kubeconfig with a Kubernetes API endpoint reachable through the kind Docker network. TLS verification remains enabled.
+
+The existing host kubeconfig is preserved independently.
+
+### Issue 1 — Git Bash Path Conversion
+
+During Kubernetes API certificate inspection, Git Bash automatically converted a Linux container path into a Windows host path.
+
+This caused the initial OpenSSL inspection command to fail.
+
+The command was corrected by disabling MSYS path conversion for the relevant Docker invocation.
+
+The Kubernetes API certificate was subsequently inspected successfully, confirming the expected control-plane DNS name.
+
+### Issue 2 — Cleanup Test Shell Resolution
+
+Initial isolated cleanup tests invoked an unexpected Bash environment on Windows and encountered WSL-related execution errors.
+
+The test harness was corrected to resolve the active Git Bash executable explicitly and invoke it by its absolute Windows path.
+
+The exact reason for the earlier executable resolution behavior was not conclusively established.
+
+The corrected tests verified existing-cluster cleanup, missing-cluster cleanup, and safe behavior when cluster deletion fails.
+
+No real cluster was deleted during these isolated tests.
+
+### Issue 3 — Docker Environment Parsing
+
+The first live containerized investigation failed before agent initialization.
+
+The original launcher used Docker's `--env-file` option, assuming equivalent parsing behavior to Python dotenv.
+
+Offline diagnostics disproved this assumption.
+
+Python dotenv accepted the API key, while Docker preserved an additional whitespace character. The strict agent configuration validator correctly rejected the container value.
+
+The implementation was corrected by introducing a host-side Python launcher that:
+
+1. Uses the existing dotenv parser.
+2. Validates agent configuration and Skill content.
+3. Explicitly forwards eleven approved agent environment variables.
+4. Passes secret values through the subprocess environment rather than command-line arguments.
+5. Retains the existing Docker security controls.
+6. Preserves Docker process exit codes.
+
+The private dotenv file remained byte-for-byte unchanged.
+
+The existing strict credential validation was not weakened.
+
+### Issue 4 — Ruff Import Ordering
+
+The initial launcher formatting verification failed because Ruff detected an import-ordering violation.
+
+The issue was corrected using Ruff's automatic import-sorting fix.
+
+Subsequent lint and formatting checks passed.
+
+### Issue 5 — External Provider Availability
+
+The second live containerized investigation successfully initialized the agent and executed two Kubernetes diagnostic MCP calls.
+
+The third LLM request returned HTTP 503.
+
+The agent terminated safely, returned an incomplete diagnosis with low confidence, closed the Kubernetes client, and did not execute remediation.
+
+The failure also exposed a known limitation: the incomplete diagnosis reports successful tool counts but does not preserve the previously collected diagnostic evidence in detail.
+
+No automatic retry was introduced, and the formal benchmark was not modified.
+
+### Live Deployment Verification
+
+Three deployment attempts were executed:
+
+| Attempt | Target | Outcome |
+|---|---|---|
+| 1 | analytics-worker | Configuration failure before LLM execution |
+| 2 | analytics-worker | Successful MCP integration followed by provider HTTP 503 |
+| 3 | build-1424 | Successful end-to-end diagnosis |
+
+The third attempt correctly identified the Docker build-context mismatch using CI evidence retrieved through MCP.
+
+It completed with two LLM requests, one successful MCP call, 8,597 tokens, and 11.748 seconds of investigation runtime.
+
+Manual review confirmed the root cause and a reasonable proposed remediation.
+
+The generated response could be improved by providing the exact corrected Buildx command, distinguishing the preferred minimal remediation more clearly, and quoting the original log formatting more faithfully.
+
+All three attempts are retained separately from the formal evaluation.
+
+### Security and Regression Verification
+
+Container security checks verified non-root execution, filesystem restrictions, dropped capabilities, no-new-privileges enforcement, and resource limits.
+
+Containerized MCP verification discovered all five tools, completed fourteen successful diagnostic checks, and correctly rejected eight invalid or unauthorized requests.
+
+The Kubernetes client used the restricted `staging:triage-reader` ServiceAccount identity.
+
+No administrator kubeconfig was mounted in the agent container.
+
+Twenty-two permanent launcher regression tests were added.
+
+Final automated verification results:
+
+- 1,219 tests passed.
+- One symbolic-link test skipped because symbolic-link creation was unavailable on the Windows platform or account.
+- All 52 Python files included in the lint target passed lint and formatting checks.
+- Dependency consistency checks passed.
+- Bash syntax checks passed.
+- All six evaluation cases passed dataset validation.
+
+The original broken workloads were preserved.
+
+No additional LLM requests were made during the final regression suite.
+
+### Evaluation Integrity
+
+The original formal benchmark remains 4/6 successful cases (66.67%).
+
+Container deployment verification results are not included in that score.
+
+No failed formal evaluation case was replaced, removed, or rerun to improve the reported benchmark.
+
+### Remaining Limitations and Future Improvements
+
+- Implement bounded provider retries with backoff while preserving request, token, and runtime limits.
+- Preserve collected evidence when an investigation terminates early.
+- Improve exact evidence quotation validation.
+- Reduce repeated prompt context to improve token efficiency.
+- Improve remediation precision.
+- Verify native Linux credential-mount permissions.
+- Consider stronger runtime secret injection mechanisms for production deployments.
+- Pin the container base image and lock transitive dependencies for stronger reproducibility.
+
+The current implementation remains a local, read-only diagnostic toolkit rather than a production remediation system.

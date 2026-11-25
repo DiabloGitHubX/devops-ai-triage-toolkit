@@ -1,15 +1,66 @@
-.git
-.venv
-.env
-.env.*
-.kube
-.runtime
-artifacts
-**/__pycache__
-**/.pytest_cache
-**/.ruff_cache
-**/*.kubeconfig
+
+# Exclude everything by default.
+**
+
+# Agent runtime
+!agent/
+!agent/**
+
+# MCP server runtime
+!mcp-server/
+!mcp-server/**
+
+# Shared runtime modules
+!common/
+!common/**
+
+# Diagnostic skill
+!skills/
+!skills/k8s-triage/
+!skills/k8s-triage/**
+
+# CI diagnostic fixtures
+!fixtures/
+!fixtures/ci/
+!fixtures/ci/**
+
+# Exclude development and evaluation code
+agent/tests/
+agent/eval/
+mcp-server/tests/
+mcp-server/requirements-dev.txt
+
+# Python caches and generated files
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/.pytest_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+**/*.egg-info/
+
+# Virtual environments
+**/.venv/
+**/venv/
+
+# Credentials and private configuration
+**/.env
+**/.env.*
+**/.kube/
+**/.runtime/
 **/kubeconfig
 **/kubeconfig.*
+**/*.kubeconfig
 **/*.key
 **/*.pem
+
+# Repository and local development files
+.git/
+.vscode/
+.idea/
+artifacts/
+docs/
+run.sh
+**/.DS_Store
+**/Thumbs.db

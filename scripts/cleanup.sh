@@ -1,3 +1,4 @@
+
 #!/usr/bin/env bash
 
 set -euo pipefail
@@ -19,8 +20,10 @@ else
     echo "[INFO] Cluster does not exist; skipping deletion"
 fi
 
-echo "[INFO] Removing default generated kubeconfig"
+echo "[INFO] Removing default generated kubeconfigs"
 
-rm -f .runtime/kubeconfig
+rm -f -- \
+    .runtime/kubeconfig \
+    .runtime/kubeconfig.container
 
 echo "[INFO] Cleanup completed"
