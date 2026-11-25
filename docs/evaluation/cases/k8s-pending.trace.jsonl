@@ -1,0 +1,29 @@
+2026-11-25 15:25:21,556 INFO __main__ Starting devops-ai-triage-toolkit using stdio transport
+2026-11-25 15:25:21,580 INFO mcp.server.lowlevel.server Processing request of type ListToolsRequest
+{"timestamp":"2026-11-25T13:25:21.638+00:00","level":"INFO","component":"agent","event":"investigation_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","max_steps":10,"max_llm_calls":12,"max_runtime":300,"token_budget":30000}
+{"timestamp":"2026-11-25T13:25:21.639+00:00","level":"INFO","component":"agent","event":"llm_request_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":1,"finalization":false,"total_tokens":0,"token_budget":30000}
+{"timestamp":"2026-11-25T13:25:22.512+00:00","level":"INFO","component":"agent","event":"llm_request_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":1,"status":"success","finalization":false,"duration_seconds":0.875,"finish_reason":"tool_calls","tool_count":1,"prompt_tokens":3780,"completion_tokens":28,"total_tokens":3808,"usage_complete":true}
+{"timestamp":"2026-11-25T13:25:22.512+00:00","level":"INFO","component":"agent","event":"tool_call_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":1,"tool":"list_pods","purpose":"Identify unhealthy pods and container states."}
+2026-11-25 15:25:22,512 INFO mcp.server.lowlevel.server Processing request of type CallToolRequest
+2026-11-25 15:25:22,514 INFO __main__ Tool invocation started: list_pods
+2026-11-25 15:25:22,550 INFO __main__ Restricted Kubernetes client initialized
+2026-11-25 15:25:22,555 INFO __main__ Tool invocation completed: list_pods
+{"timestamp":"2026-11-25T13:25:22.559+00:00","level":"INFO","component":"agent","event":"tool_call_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":1,"tool":"list_pods","purpose":"Identify unhealthy pods and container states.","status":"success","duration_seconds":0.047}
+{"timestamp":"2026-11-25T13:25:22.559+00:00","level":"INFO","component":"agent","event":"llm_request_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":2,"finalization":false,"total_tokens":3808,"token_budget":30000}
+{"timestamp":"2026-11-25T13:25:23.637+00:00","level":"INFO","component":"agent","event":"llm_request_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":2,"status":"success","finalization":false,"duration_seconds":1.078,"finish_reason":"tool_calls","tool_count":1,"prompt_tokens":3863,"completion_tokens":16,"total_tokens":7687,"usage_complete":true}
+{"timestamp":"2026-11-25T13:25:23.637+00:00","level":"INFO","component":"agent","event":"tool_call_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":2,"tool":"list_pods","purpose":"Identify unhealthy pods and container states."}
+2026-11-25 15:25:23,638 INFO mcp.server.lowlevel.server Processing request of type CallToolRequest
+2026-11-25 15:25:23,638 INFO __main__ Tool invocation started: list_pods
+2026-11-25 15:25:23,647 INFO __main__ Tool invocation completed: list_pods
+{"timestamp":"2026-11-25T13:25:23.649+00:00","level":"INFO","component":"agent","event":"tool_call_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":2,"tool":"list_pods","purpose":"Identify unhealthy pods and container states.","status":"success","duration_seconds":0.016}
+{"timestamp":"2026-11-25T13:25:23.649+00:00","level":"INFO","component":"agent","event":"llm_request_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":3,"finalization":false,"total_tokens":7687,"token_budget":30000}
+{"timestamp":"2026-11-25T13:25:24.695+00:00","level":"INFO","component":"agent","event":"llm_request_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":3,"status":"success","finalization":false,"duration_seconds":1.047,"finish_reason":"tool_calls","tool_count":1,"prompt_tokens":4559,"completion_tokens":42,"total_tokens":12288,"usage_complete":true}
+{"timestamp":"2026-11-25T13:25:24.695+00:00","level":"INFO","component":"agent","event":"tool_call_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":3,"tool":"describe_pod","purpose":"Inspect pod status, termination reasons and events."}
+2026-11-25 15:25:24,696 INFO mcp.server.lowlevel.server Processing request of type CallToolRequest
+2026-11-25 15:25:24,696 INFO __main__ Tool invocation started: describe_pod
+2026-11-25 15:25:24,710 INFO __main__ Tool invocation completed: describe_pod
+{"timestamp":"2026-11-25T13:25:24.713+00:00","level":"INFO","component":"agent","event":"tool_call_completed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","step":3,"tool":"describe_pod","purpose":"Inspect pod status, termination reasons and events.","status":"success","duration_seconds":0.015}
+{"timestamp":"2026-11-25T13:25:24.714+00:00","level":"INFO","component":"agent","event":"llm_request_started","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":4,"finalization":false,"total_tokens":12288,"token_budget":30000}
+{"timestamp":"2026-11-25T13:25:26.529+00:00","level":"INFO","component":"agent","event":"llm_request_failed","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","llm_call":4,"status":"provider_error","error_category":"provider_http_error","http_status":503,"duration_seconds":1.813,"usage_complete":false}
+{"timestamp":"2026-11-25T13:25:26.529+00:00","level":"INFO","component":"agent","event":"investigation_finished","investigation_id":"2dc93422016c4a28bc58f6f435da9ee1","completed":false,"stop_reason":"llm_request_failed","duration_seconds":4.891,"llm_call":4,"tool_attempts":3,"successful_tools":3,"failed_tools":0,"prompt_tokens":12202,"completion_tokens":86,"total_tokens":12288,"token_budget":30000,"usage_complete":false}
+2026-11-25 15:25:26,535 INFO __main__ Kubernetes client closed

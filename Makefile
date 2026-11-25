@@ -4,23 +4,31 @@ SHELL := bash
 PYTHON ?= python
 ARGS ?= --help
 
-.PHONY: help env kubeconfig mcp mcp-smoke agent test lint clean
+.PHONY: help env kubeconfig mcp mcp-smoke agent eval eval-validate test lint clean
 
 help:
 	@echo "Available targets:"
-	@echo "  make env         Provision the Kubernetes environment"
-	@echo "  make kubeconfig  Refresh restricted Kubernetes credentials"
-	@echo "  make mcp         Start the MCP server using stdio"
-	@echo "  make mcp-smoke   Run MCP protocol integration tests"
-	@echo "  make agent       Run the autonomous diagnostic agent"
-	@echo "  make test        Run automated safety and regression tests"
-	@echo "  make lint        Check Python linting and formatting"
-	@echo "  make clean       Remove the local Kubernetes environment"
+	@echo "  make env            Provision the Kubernetes environment"
+	@echo "  make kubeconfig     Refresh restricted Kubernetes credentials"
+	@echo "  make mcp            Start the MCP server using stdio"
+	@echo "  make mcp-smoke      Run MCP protocol integration tests"
+	@echo "  make agent          Run the autonomous diagnostic agent"
+	@echo "  make eval           Run the full live agent evaluation"
+	@echo "  make eval-validate  Validate evaluation cases without LLM requests"
+	@echo "  make test           Run automated safety and regression tests"
+	@echo "  make lint           Check Python linting and formatting"
+	@echo "  make clean          Remove the local Kubernetes environment"
 	@echo ""
 	@echo "Agent examples:"
 	@echo '  make agent ARGS="--ci build-1423"'
 	@echo '  make agent ARGS="--pod payments-api"'
 	@echo '  make agent ARGS="--namespace staging --pod orders-api"'
+	@echo ""
+	@echo "Evaluation examples:"
+	@echo "  make eval-validate"
+	@echo "  make eval"
+	@echo ""
+	@echo "Note: make eval makes live LLM requests and saves evaluation reports."
 
 env:
 	bash scripts/setup.sh
@@ -36,6 +44,12 @@ mcp-smoke:
 
 agent:
 	@$(PYTHON) -m agent $(ARGS)
+
+eval:
+	@$(PYTHON) -m agent.eval
+
+eval-validate:
+	@$(PYTHON) -m agent.eval --validate-only
 
 test:
 	$(PYTHON) -m pytest -q

@@ -1,3 +1,4 @@
+
 * text=auto
 
 *.sh text eol=lf
@@ -13,5 +14,15 @@ Dockerfile text eol=lf
 
 *.ini text eol=lf
 *.txt text eol=lf
+*.json text eol=lf
+*.jsonl text eol=lf
 .env*.example text eol=lf
 .gitattributes text eol=lf
+
+# Preserve original formal evaluation artifacts byte-for-byte.
+# Generated diagnoses and traces may contain original CRLF line
+# endings and whitespace that must not be modified by Git.
+docs/evaluation/baseline.json -text !eol
+docs/evaluation/results.json -text !eol
+docs/evaluation/report.md -text !eol
+docs/evaluation/cases/** -text !eol whitespace=cr-at-eol,-blank-at-eol,-blank-at-eof,-space-before-tab

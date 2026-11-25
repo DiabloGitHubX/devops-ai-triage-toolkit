@@ -1,0 +1,296 @@
+{
+  "schema_version": 1,
+  "description": "Ground-truth evaluation cases for the read-only DevOps diagnostic agent.",
+  "cases": [
+    {
+      "id": "k8s-image-pull",
+      "category": "kubernetes",
+      "description": "Container image cannot be pulled.",
+      "arguments": [
+        "--namespace",
+        "staging",
+        "--pod",
+        "payments-api"
+      ],
+      "expected_root_cause": "The configured nginx:triage-nonexistent-tag image tag does not exist in the container registry.",
+      "root_cause_groups": [
+        [
+          "image",
+          "nginx",
+          "images"
+        ],
+        [
+          "tag",
+          "manifest",
+          "image reference",
+          "tags",
+          "manifests"
+        ],
+        [
+          "not found",
+          "notfound",
+          "nonexistent",
+          "non-existent",
+          "does not exist",
+          "invalid",
+          "unavailable",
+          "doesn't exist",
+          "missing"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "ImagePullBackOff",
+          "ErrImagePull",
+          "failed to pull"
+        ],
+        [
+          "triage-nonexistent-tag"
+        ],
+        [
+          "not found",
+          "notfound",
+          "manifest unknown",
+          "does not exist"
+        ]
+      ],
+      "required_successful_tools": [
+        "describe_pod"
+      ]
+    },
+    {
+      "id": "k8s-crash-loop",
+      "category": "kubernetes",
+      "description": "Application container repeatedly exits during startup.",
+      "arguments": [
+        "--namespace",
+        "staging",
+        "--pod",
+        "orders-api"
+      ],
+      "expected_root_cause": "The required DATABASE_URL environment variable is missing, causing application startup validation to fail and the container to exit.",
+      "root_cause_groups": [
+        [
+          "DATABASE_URL"
+        ],
+        [
+          "missing",
+          "not configured",
+          "not set",
+          "unset",
+          "not defined",
+          "absent",
+          "not provided",
+          "undefined",
+          "not supplied"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "Required environment variable DATABASE_URL is not configured"
+        ]
+      ],
+      "required_successful_tools": [
+        "describe_pod",
+        "get_pod_logs"
+      ]
+    },
+    {
+      "id": "k8s-pending",
+      "category": "kubernetes",
+      "description": "Workload cannot be scheduled.",
+      "arguments": [
+        "--namespace",
+        "staging",
+        "--pod",
+        "analytics-worker"
+      ],
+      "expected_root_cause": "The workload requests 100 CPU cores, exceeding available node CPU capacity and preventing Kubernetes scheduling.",
+      "root_cause_groups": [
+        [
+          "cpu"
+        ],
+        [
+          "request",
+          "resource requirement",
+          "requests",
+          "requested",
+          "requesting",
+          "resource requirements"
+        ],
+        [
+          "insufficient",
+          "exceeds",
+          "exceeding",
+          "too high",
+          "too large",
+          "unsatisfiable",
+          "cannot satisfy",
+          "cannot be satisfied",
+          "not enough",
+          "more than",
+          "greater than",
+          "exceed",
+          "exceeded",
+          "excessive",
+          "cannot accommodate",
+          "unable to satisfy"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "Insufficient cpu"
+        ],
+        [
+          "100",
+          "100000m"
+        ]
+      ],
+      "required_successful_tools": [
+        "describe_pod"
+      ]
+    },
+    {
+      "id": "ci-test-failure",
+      "category": "ci",
+      "description": "Application unit test fails.",
+      "arguments": [
+        "--ci",
+        "build-1423"
+      ],
+      "expected_root_cause": "The application incorrectly accepts negative payment amounts instead of rejecting them with HTTP 400.",
+      "root_cause_groups": [
+        [
+          "negative"
+        ],
+        [
+          "payment",
+          "amount",
+          "payments",
+          "amounts"
+        ],
+        [
+          "accept",
+          "validation",
+          "validate",
+          "reject",
+          "201",
+          "accepts",
+          "accepted",
+          "accepting",
+          "validating",
+          "validated",
+          "rejects",
+          "rejected",
+          "rejecting"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "test_negative_amount_rejected"
+        ],
+        [
+          "201 == 400",
+          "201 Created",
+          "201 instead of 400"
+        ]
+      ],
+      "required_successful_tools": [
+        "get_ci_log"
+      ]
+    },
+    {
+      "id": "ci-docker-build",
+      "category": "ci",
+      "description": "Docker image build fails while copying dependencies.",
+      "arguments": [
+        "--ci",
+        "build-1424"
+      ],
+      "expected_root_cause": "The Docker build uses the repository root as its build context, while requirements.txt is located under services/orders-api.",
+      "root_cause_groups": [
+        [
+          "build context",
+          "docker context",
+          "context directory"
+        ],
+        [
+          "requirements.txt"
+        ],
+        [
+          "incorrect",
+          "wrong",
+          "repository root",
+          "repo root",
+          "mismatch",
+          "misconfigured",
+          "project root",
+          "root directory",
+          "root of the build context",
+          "build context root",
+          "root of the repository",
+          "root of the repo"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "COPY requirements.txt"
+        ],
+        [
+          "not found",
+          "failed to calculate checksum"
+        ],
+        [
+          "services/orders-api/requirements.txt"
+        ]
+      ],
+      "required_successful_tools": [
+        "get_ci_log"
+      ]
+    },
+    {
+      "id": "ci-helm-validation",
+      "category": "ci",
+      "description": "Helm chart validation fails during template rendering.",
+      "arguments": [
+        "--ci",
+        "build-1425"
+      ],
+      "expected_root_cause": "The Helm values omit the resources.requests mapping required by the Deployment template, causing a nil pointer when accessing requests.memory.",
+      "root_cause_groups": [
+        [
+          "resources.requests",
+          "resource requests",
+          "resources requests",
+          "requests mapping",
+          "requests section",
+          "requests key"
+        ],
+        [
+          "missing",
+          "not defined",
+          "undefined",
+          "absent",
+          "omitted",
+          "not configured",
+          "not specified",
+          "not provided",
+          "nil",
+          "does not exist"
+        ]
+      ],
+      "evidence_groups": [
+        [
+          "nil pointer"
+        ],
+        [
+          "resources.requests.memory",
+          "interface {}.memory"
+        ]
+      ],
+      "required_successful_tools": [
+        "get_ci_log"
+      ]
+    }
+  ]
+}

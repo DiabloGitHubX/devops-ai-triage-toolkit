@@ -1,0 +1,49 @@
+### Symptom
+
+CI job `build-1423` failed during the unit test stage because pytest encountered a test assertion failure in `tests/test_payments.py::test_negative_amount_rejected`.
+
+### Evidence
+
+From `get_ci_log` (job `build-1423`):
+
+```text
+tests/test_payments.py::test_negative_amount_rejected FAILED
+
+================================== FAILURES ===================================
+________________________ test_negative_amount_rejected ________________________
+
+tests/test_payments.py:42: in test_negative_amount_rejected
+    assert response.status_code == 400
+E   assert 201 == 400
+E    +  where 201 = response.status_code
+
+Captured application log:
+INFO payments-api: Received payment request amount=-50 currency=USD
+INFO payments-api: Payment accepted
+
+=========================== short test summary info ===========================
+FAILED tests/test_payments.py::test_payments.py::test_negative_amount_rejected
+========================= 1 failed, 5 passed in 0.84s ==========================
+
+2026-11-24T08:00:19Z [ERROR] Unit test stage failed
+```
+
+### Root cause
+
+The application accepted a payment request with a negative amount (`amount=-50`) and returned status code `201 (Created)` instead of rejecting it with status code `400 (Bad Request)` as expected by the test `test_negative_amount_rejected`. This indicates an application validation defect where negative payment amounts are not correctly validated and rejected.
+
+### Suggested fix
+
+Update the payment request validation logic in the application source code (`payments-api`) to check for negative or invalid amounts and return HTTP status `400` when `amount <= 0`. 
+
+Illustrative fix in the payment validation handler:
+```python
+if amount <= 0:
+    return {"error": "Invalid payment amount"}, 400
+```
+
+Verify the fix locally by running pytest on the updated payment validation tests before committing.
+
+### Confidence
+
+- High: The test failure output explicitly shows the assertion mismatch (`assert 201 == 400`) and the captured application log confirming that the negative amount request was accepted (`Payment accepted`).

@@ -1,0 +1,21 @@
+### Symptom
+
+The investigation could not be completed.
+
+### Evidence
+
+Successful diagnostic calls: 0.
+
+Stop reason: `llm_request_failed`.
+
+### Root cause
+
+Unknown — insufficient evidence.
+
+### Suggested fix
+
+Review the execution trace and investigation limits before continuing diagnostics. No remediation has been executed.
+
+### Confidence
+
+Low — no completed root-cause diagnosis.

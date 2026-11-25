@@ -817,3 +817,257 @@ Evaluation answers must remain separate from the agent's runtime context.
 Failed investigations, incorrect diagnoses and incomplete results must remain visible in the evaluation report.
 
 Subsequent work will address containerized execution, final documentation and end-to-end reproducibility verification.
+
+
+---
+
+## Phase 8 — Evaluation harness and formal benchmark
+
+### Objective
+
+Implement a reproducible evaluation harness that measures the
+agent's diagnostic performance against controlled Kubernetes
+and CI failure scenarios.
+
+### AI-assisted work
+
+AI assistance was used to design and implement:
+
+- The six-case evaluation dataset and ground-truth expectations.
+- Deterministic root-cause and evidence matching.
+- Structured trace validation and budget reconciliation.
+- Bounded subprocess execution.
+- Machine-readable JSON and human-readable Markdown reports.
+- Evaluation CLI and Makefile integration.
+- Permanent regression tests for the evaluation components.
+- Source fingerprinting and evidence preservation scripts.
+- Manual evaluation review and documentation.
+
+### Human execution and verification
+
+The project author executed the generated commands locally,
+reviewed their output, and provided the actual results for
+iterative verification.
+
+Verification included:
+
+- Dataset schema and argument validation.
+- Historical diagnosis replay.
+- Synthetic successful and unsuccessful execution traces.
+- Subprocess timeout and launch-failure handling.
+- Report generation and aggregation.
+- CLI exit-code behavior.
+- Full regression, lint and dependency checks.
+- Live MCP integration and restricted Kubernetes access.
+- Formal benchmark execution and artifact inspection.
+
+### Corrections during development
+
+Historical replay exposed a false-negative Docker root-cause
+match caused by insufficient alternative wording in the
+evaluation concept groups.
+
+The accepted concept alternatives were expanded before the
+formal benchmark to recognize equivalent descriptions of the
+incorrect Docker build context.
+
+This calibration was performed using development artifacts,
+not the formal benchmark results.
+
+Trace validation was also refined to distinguish counted tool
+attempts from budget-rejected or runtime-rejected tool requests,
+and to reconcile sequential tool start and completion records.
+
+These corrections were regression-tested before the formal
+evaluation baseline was frozen.
+
+### Regression verification
+
+The evaluation harness introduced 296 permanent regression tests:
+
+| Component | Passed tests |
+|---|---:|
+| Dataset validation | 89 |
+| Deterministic evaluator | 103 |
+| Subprocess runner | 45 |
+| Reporting | 30 |
+| CLI | 29 |
+| Total | 296 |
+
+The consolidated project verification reported:
+
+- 1,197 tests passed.
+- One platform-specific symbolic-link test skipped.
+- Zero failed tests.
+- Ruff lint and formatting passed for 50 files.
+- No broken Python requirements.
+- All live MCP smoke tests passed.
+
+The skipped test concerns symbolic-link creation restrictions
+on the local Windows environment.
+
+### Formal evaluation
+
+Date: November 25, 2026
+
+Run ID: `20261125T132455Z-16dd8adc`
+
+Model: `gemini-3.5-flash-lite`
+
+Before execution, 71 source files were fingerprinted using
+SHA-256. The agent configuration and one-attempt-per-case
+evaluation policy were recorded.
+
+All six scenarios were attempted once.
+
+| Case | Automated outcome |
+|---|---|
+| Kubernetes ImagePullBackOff | PASS |
+| Kubernetes CrashLoopBackOff | PASS |
+| Kubernetes Pending | FAIL — HTTP 503 |
+| CI application test failure | PASS |
+| CI Docker build failure | PASS |
+| CI Helm validation | FAIL — HTTP 429 |
+
+The formal automated pass rate was 4/6 (66.67%).
+
+The agent completed four investigations and successfully
+executed all ten attempted MCP tool calls.
+
+The evaluation recorded 16 LLM request attempts, 64,359
+reported tokens and 62.313 seconds of subprocess wall time.
+
+Token accounting was incomplete for the two failed
+investigations.
+
+No failed case was retried or removed from the denominator.
+
+The 71 source fingerprints, Git HEAD and recorded agent
+configuration were verified after execution.
+
+### Concrete AI-generated diagnosis defects
+
+Manual technical review identified limitations that the
+automated evaluator did not detect.
+
+#### Evidence quotation defect
+
+In the CI application test investigation, the original fixture
+contained:
+
+```text
+FAILED tests/test_payments.py::test_negative_amount_rejected
+```
+
+The generated diagnosis instead quoted:
+
+```text
+FAILED tests/test_payments.py::test_payments.py::test_negative_amount_rejected
+```
+
+The duplicated test identifier demonstrates that an AI-generated
+diagnosis can identify the correct root cause while introducing
+an error into supposedly quoted evidence.
+
+The automated evaluator still passed this case because its
+expected evidence concepts were present.
+
+This finding was documented rather than modifying the evaluator
+or replacing the formal result.
+
+#### Remediation precision
+
+The Docker investigation correctly identified the incorrect
+build context, but its suggested command unnecessarily changed
+the original Buildx invocation and image tag.
+
+The manual review documented a more precise correction that
+preserves the original command and changes only the context.
+
+The Kubernetes image-pull investigation also suggested updating
+a ReplicaSet as an alternative to its owning Deployment.
+The preferred remediation is to update the source-controlled
+Deployment.
+
+The CrashLoopBackOff diagnosis made claims about historical
+restart behavior and previous-log retrieval that could not be
+fully verified from the retained structured trace.
+
+### Provider failure handling
+
+The Pending investigation completed three successful MCP calls
+before its fourth LLM request returned HTTP 503.
+
+The Helm investigation received HTTP 429 on its first LLM
+request, before executing any diagnostic tool.
+
+Both investigations terminated with an explicit unknown root
+cause and low confidence.
+
+This behavior avoided fabricating a completed diagnosis,
+but both cases remained unsuccessful.
+
+Bounded retries, evidence retention during provider failures
+and prompt-context reduction were identified as future
+improvements.
+
+They were not implemented after freezing the formal benchmark.
+
+### Decisions and limitations
+
+The evaluation uses deterministic concept matching rather than
+a second LLM as a judge. This reduces evaluation cost and makes
+scoring reproducible, but requires manual semantic review.
+
+Five scenarios had already been exercised during development.
+The benchmark is therefore a controlled functional evaluation,
+not an independent held-out accuracy benchmark.
+
+The formal evidence was preserved under `docs/evaluation/`
+after credential checks and byte-for-byte copy verification.
+
+The original generated artifacts remain excluded from Git.
+
+No remediation commands were executed during evaluation or
+manual review.
+
+### Outcome
+
+All four completed investigations had manually corroborated
+root causes, with documented evidence and remediation caveats.
+
+The official automated result remains 66.67%, including both
+provider-related failures.
+
+The evaluation demonstrates useful diagnostic capabilities,
+controlled failure behavior and transparent reporting without
+claiming production-wide reliability.
+
+
+### Git evidence preservation correction
+
+The final staging audit exposed Windows line-ending
+normalization and trailing whitespace in an original
+AI-generated diagnosis.
+
+The initial audit incorrectly assumed that the original
+working-tree SHA-256 fingerprints would always match the
+Git index byte-for-byte.
+
+Read-only diagnostics established that 32 of the 71
+fingerprinted source files differed only in line endings.
+Twelve of the 15 evaluation artifacts were also affected.
+
+No actual content differences were found.
+
+The repository's Git attributes were refined to preserve
+original evaluation artifacts byte-for-byte while retaining
+LF normalization for source code.
+
+The staged-content audit was revised to distinguish exact
+working-tree fingerprint verification from normalized
+source equivalence.
+
+The original baseline and benchmark results were retained.
+No generated diagnosis was edited to satisfy whitespace
+validation, and no evaluation case was retried.

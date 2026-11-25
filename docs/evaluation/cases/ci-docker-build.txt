@@ -1,0 +1,59 @@
+### Symptom
+
+CI job `build-1424` failed during the Docker build stage because the Dockerfile attempting to copy `requirements.txt` from the build context root could not find the file.
+
+### Evidence
+
+Quoted from `get_ci_log` (`job_id`: `build-1424`):
+
+```text
+#7 [3/5] COPY requirements.txt .
+#7 ERROR: failed to calculate checksum: "/requirements.txt": not found
+
+------
+ > [3/5] COPY requirements.txt .:
+------
+
+Dockerfile:5
+--------------------
+   3 | WORKDIR /app
+   4 |
+   5 | >>> COPY requirements.txt .
+   6 | RUN pip install --no-cache-dir -r requirements.txt
+   7 | COPY . .
+--------------------
+
+ERROR: failed to solve: failed to compute cache key:
+failed to calculate checksum: "/requirements.txt": not found
+
+$ find . -name requirements.txt
+./services/orders-api/requirements.txt
+```
+
+### Root cause
+
+The Docker build context or the Dockerfile path is misconfigured. The Dockerfile instructs Docker to copy `requirements.txt` from the root of the build context (`COPY requirements.txt .`), but the file actually resides in a subdirectory (`./services/orders-api/requirements.txt`), as confirmed by the CI job's diagnostic `find` command.
+
+### Suggested fix
+
+Update either the build context path in the CI configuration (to point directly to `./services/orders-api`) or adjust the Dockerfile / build invocation so that `requirements.txt` is correctly included in the build context and referenced properly.
+
+For example, if updating the build command or CI configuration to use `services/orders-api` as the build context root, ensure the Docker build invocation specifies the context path:
+
+```bash
+docker build -t orders-api:latest ./services/orders-api
+```
+
+Alternatively, if building from the repository root, adjust the `Dockerfile` COPY instructions to reference the correct relative path:
+
+```dockerfile
+COPY services/orders-api/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY services/orders-api/ .
+```
+
+*(Note: Verify the exact project directory structure and preferred build pipeline conventions before applying changes.)*
+
+### Confidence
+
+- High: The CI logs explicitly show the Docker build error `"/requirements.txt": not found` immediately followed by a diagnostic `find . -name requirements.txt` locating the file at `./services/orders-api/requirements.txt`.

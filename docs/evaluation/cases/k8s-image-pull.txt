@@ -1,0 +1,41 @@
+### Symptom
+
+The Kubernetes workload `payments-api` in namespace `staging` (specifically pod `payments-api-7b775b9b67-564dj`) is failing to start, remaining in a `Pending` state with its container failing due to an `ImagePullBackOff` error.
+
+### Evidence
+
+- From `describe_pod` and `list_pods` for `payments-api-7b775b9b67-564dj`:
+  - Container state: `Waiting` with reason `ImagePullBackOff` / `ErrImagePull`.
+  - Detailed message: `Failed to pull image "nginx:triage-nonexistent-tag": rpc error: code = NotFound desc = failed to pull and unpack image "docker.io/library/nginx:triage-nonexistent-tag": failed to resolve reference "docker.io/library/nginx:triage-nonexistent-tag": docker.io/library/nginx:triage-nonexistent-tag: not found`.
+  - Configured image: `nginx:triage-nonexistent-tag`.
+  - Owner: ReplicaSet `payments-api-7b775b9b67`.
+
+### Root cause
+
+The container image tag `nginx:triage-nonexistent-tag` specified in the workload configuration does not exist in the container registry, resulting in a `NotFound` error during the image pull process.
+
+### Suggested fix
+
+Update the owning workload's declarative manifest (Deployment or ReplicaSet) to reference a valid and verified image tag (e.g., a specific version tag or immutable digest) instead of `nginx:triage-nonexistent-tag`.
+
+Example declarative update to the Deployment/ReplicaSet manifest:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-api
+  namespace: staging
+spec:
+  template:
+    spec:
+      containers:
+      - name: payments-api
+        image: nginx:<verified-version-tag> # Replace with a valid, tested image tag or digest
+```
+
+Verify that the replacement image exists in the registry prior to deployment.
+
+### Confidence
+
+- High: The exact error message from Kubernetes API events and container status explicitly confirms that the image reference cannot be found in the registry.

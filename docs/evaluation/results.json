@@ -1,0 +1,735 @@
+{
+  "schema_version": 1,
+  "run_id": "20261125T132455Z-16dd8adc",
+  "started_at": "2026-11-25T13:24:55.256450+00:00",
+  "finished_at": "2026-11-25T13:25:57.613626+00:00",
+  "model": "gemini-3.5-flash-lite",
+  "limits": {
+    "max_steps": 10,
+    "max_llm_calls": 12,
+    "max_runtime": 300,
+    "token_budget": 30000
+  },
+  "evaluation_method": "Deterministic heuristic scoring; one attempt per configured case; manual review required.",
+  "summary": {
+    "attempted": 6,
+    "passed": 4,
+    "failed": 2,
+    "completed": 4,
+    "incomplete": 2,
+    "pass_rate_percent": 66.67,
+    "completion_rate_percent": 66.67,
+    "timed_out": 0,
+    "execution_errors": 0,
+    "usage_complete_cases": 4,
+    "usage_incomplete_cases": 2,
+    "reported_token_total": 64359,
+    "complete_usage_token_total": 52071,
+    "average_tokens_complete_usage": 13017.75,
+    "total_wall_time_seconds": 62.313,
+    "average_wall_time_seconds": 10.386,
+    "failed_checks": {
+      "evidence_match": 2,
+      "investigation_completed": 2,
+      "process_exit": 2,
+      "required_tools": 1,
+      "root_cause_match": 2,
+      "token_accounting": 2,
+      "token_budget": 1
+    },
+    "stop_reasons": {
+      "diagnosis_completed": 4,
+      "llm_request_failed": 2
+    },
+    "categories": {
+      "ci": {
+        "attempted": 3,
+        "passed": 2,
+        "failed": 1,
+        "pass_rate_percent": 66.67
+      },
+      "kubernetes": {
+        "attempted": 3,
+        "passed": 2,
+        "failed": 1,
+        "pass_rate_percent": 66.67
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "k8s-image-pull",
+      "category": "kubernetes",
+      "evaluation": {
+        "case_id": "k8s-image-pull",
+        "passed": true,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": true,
+            "detail": "Process exit code: 0"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": true,
+            "detail": "Stop reason: diagnosis_completed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": true,
+            "detail": "All root-cause concept groups matched."
+          },
+          {
+            "name": "evidence_match",
+            "passed": true,
+            "detail": "All evidence concept groups matched."
+          },
+          {
+            "name": "required_tools",
+            "passed": true,
+            "detail": "All required diagnostic tools succeeded."
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 2/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 3/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": true,
+            "detail": "Complete provider usage accounting: True"
+          },
+          {
+            "name": "token_budget",
+            "passed": true,
+            "detail": "Reported tokens: 14115/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 4.61/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 9.828/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 0,
+        "completed": true,
+        "stop_reason": "diagnosis_completed",
+        "total_tokens": 14115,
+        "usage_complete": true,
+        "tool_attempts": 2,
+        "llm_calls": 3,
+        "duration_seconds": 4.61,
+        "successful_tools": [
+          "describe_pod",
+          "list_pods"
+        ]
+      },
+      "wall_time_seconds": 9.828,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/k8s-image-pull.txt",
+      "trace_path": "cases/k8s-image-pull.trace.jsonl"
+    },
+    {
+      "case_id": "k8s-crash-loop",
+      "category": "kubernetes",
+      "evaluation": {
+        "case_id": "k8s-crash-loop",
+        "passed": true,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": true,
+            "detail": "Process exit code: 0"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": true,
+            "detail": "Stop reason: diagnosis_completed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": true,
+            "detail": "All root-cause concept groups matched."
+          },
+          {
+            "name": "evidence_match",
+            "passed": true,
+            "detail": "All evidence concept groups matched."
+          },
+          {
+            "name": "required_tools",
+            "passed": true,
+            "detail": "All required diagnostic tools succeeded."
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 3/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 4/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": true,
+            "detail": "Complete provider usage accounting: True"
+          },
+          {
+            "name": "token_budget",
+            "passed": true,
+            "detail": "Reported tokens: 20587/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 5.828/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 10.735/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 0,
+        "completed": true,
+        "stop_reason": "diagnosis_completed",
+        "total_tokens": 20587,
+        "usage_complete": true,
+        "tool_attempts": 3,
+        "llm_calls": 4,
+        "duration_seconds": 5.828,
+        "successful_tools": [
+          "describe_pod",
+          "get_pod_logs",
+          "list_pods"
+        ]
+      },
+      "wall_time_seconds": 10.735,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/k8s-crash-loop.txt",
+      "trace_path": "cases/k8s-crash-loop.trace.jsonl"
+    },
+    {
+      "case_id": "k8s-pending",
+      "category": "kubernetes",
+      "evaluation": {
+        "case_id": "k8s-pending",
+        "passed": false,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": false,
+            "detail": "Process exit code: 1"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": false,
+            "detail": "Stop reason: llm_request_failed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": false,
+            "detail": "Root cause explicitly reported as unknown."
+          },
+          {
+            "name": "evidence_match",
+            "passed": false,
+            "detail": "Unmatched evidence groups: (1, 2)"
+          },
+          {
+            "name": "required_tools",
+            "passed": true,
+            "detail": "All required diagnostic tools succeeded."
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 3/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 4/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": false,
+            "detail": "Complete provider usage accounting: False"
+          },
+          {
+            "name": "token_budget",
+            "passed": true,
+            "detail": "Reported tokens: 12288/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 4.891/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 11.188/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 1,
+        "completed": false,
+        "stop_reason": "llm_request_failed",
+        "total_tokens": 12288,
+        "usage_complete": false,
+        "tool_attempts": 3,
+        "llm_calls": 4,
+        "duration_seconds": 4.891,
+        "successful_tools": [
+          "describe_pod",
+          "list_pods"
+        ]
+      },
+      "wall_time_seconds": 11.188,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/k8s-pending.txt",
+      "trace_path": "cases/k8s-pending.trace.jsonl"
+    },
+    {
+      "case_id": "ci-test-failure",
+      "category": "ci",
+      "evaluation": {
+        "case_id": "ci-test-failure",
+        "passed": true,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": true,
+            "detail": "Process exit code: 0"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": true,
+            "detail": "Stop reason: diagnosis_completed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": true,
+            "detail": "All root-cause concept groups matched."
+          },
+          {
+            "name": "evidence_match",
+            "passed": true,
+            "detail": "All evidence concept groups matched."
+          },
+          {
+            "name": "required_tools",
+            "passed": true,
+            "detail": "All required diagnostic tools succeeded."
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 1/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 2/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": true,
+            "detail": "Complete provider usage accounting: True"
+          },
+          {
+            "name": "token_budget",
+            "passed": true,
+            "detail": "Reported tokens: 8697/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 11.703/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 17.094/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 0,
+        "completed": true,
+        "stop_reason": "diagnosis_completed",
+        "total_tokens": 8697,
+        "usage_complete": true,
+        "tool_attempts": 1,
+        "llm_calls": 2,
+        "duration_seconds": 11.703,
+        "successful_tools": [
+          "get_ci_log"
+        ]
+      },
+      "wall_time_seconds": 17.094,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/ci-test-failure.txt",
+      "trace_path": "cases/ci-test-failure.trace.jsonl"
+    },
+    {
+      "case_id": "ci-docker-build",
+      "category": "ci",
+      "evaluation": {
+        "case_id": "ci-docker-build",
+        "passed": true,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": true,
+            "detail": "Process exit code: 0"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": true,
+            "detail": "Stop reason: diagnosis_completed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": true,
+            "detail": "All root-cause concept groups matched."
+          },
+          {
+            "name": "evidence_match",
+            "passed": true,
+            "detail": "All evidence concept groups matched."
+          },
+          {
+            "name": "required_tools",
+            "passed": true,
+            "detail": "All required diagnostic tools succeeded."
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 1/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 2/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": true,
+            "detail": "Complete provider usage accounting: True"
+          },
+          {
+            "name": "token_budget",
+            "passed": true,
+            "detail": "Reported tokens: 8672/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 3.375/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 8.281/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 0,
+        "completed": true,
+        "stop_reason": "diagnosis_completed",
+        "total_tokens": 8672,
+        "usage_complete": true,
+        "tool_attempts": 1,
+        "llm_calls": 2,
+        "duration_seconds": 3.375,
+        "successful_tools": [
+          "get_ci_log"
+        ]
+      },
+      "wall_time_seconds": 8.281,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/ci-docker-build.txt",
+      "trace_path": "cases/ci-docker-build.trace.jsonl"
+    },
+    {
+      "case_id": "ci-helm-validation",
+      "category": "ci",
+      "evaluation": {
+        "case_id": "ci-helm-validation",
+        "passed": false,
+        "checks": [
+          {
+            "name": "process_exit",
+            "passed": false,
+            "detail": "Process exit code: 1"
+          },
+          {
+            "name": "trace_integrity",
+            "passed": true,
+            "detail": "Expected one correlated investigation start and finish."
+          },
+          {
+            "name": "investigation_completed",
+            "passed": false,
+            "detail": "Stop reason: llm_request_failed"
+          },
+          {
+            "name": "diagnosis_format",
+            "passed": true,
+            "detail": "Expected five unique, ordered and nonempty sections."
+          },
+          {
+            "name": "root_cause_match",
+            "passed": false,
+            "detail": "Root cause explicitly reported as unknown."
+          },
+          {
+            "name": "evidence_match",
+            "passed": false,
+            "detail": "Unmatched evidence groups: (1, 2)"
+          },
+          {
+            "name": "required_tools",
+            "passed": false,
+            "detail": "Missing successful tools: ['get_ci_log']"
+          },
+          {
+            "name": "tool_inventory",
+            "passed": true,
+            "detail": "Observed tool requests must use the diagnostic allowlist."
+          },
+          {
+            "name": "tool_budget",
+            "passed": true,
+            "detail": "Tool attempts: 0/10; counter reconciliation: True"
+          },
+          {
+            "name": "llm_call_budget",
+            "passed": true,
+            "detail": "LLM calls: 1/12"
+          },
+          {
+            "name": "token_accounting",
+            "passed": false,
+            "detail": "Complete provider usage accounting: False"
+          },
+          {
+            "name": "token_budget",
+            "passed": false,
+            "detail": "Reported tokens: 0/30000"
+          },
+          {
+            "name": "runtime_budget",
+            "passed": true,
+            "detail": "Agent runtime: 0.407/300 seconds"
+          },
+          {
+            "name": "subprocess_execution",
+            "passed": true,
+            "detail": "Process returned."
+          },
+          {
+            "name": "subprocess_timeout",
+            "passed": true,
+            "detail": "Wall time: 5.187/330 seconds"
+          },
+          {
+            "name": "capture_size",
+            "passed": true,
+            "detail": "Captured output within evaluation limits."
+          },
+          {
+            "name": "configuration_consistency",
+            "passed": true,
+            "detail": "Observed limits must match the evaluation run configuration."
+          }
+        ],
+        "exit_code": 1,
+        "completed": false,
+        "stop_reason": "llm_request_failed",
+        "total_tokens": 0,
+        "usage_complete": false,
+        "tool_attempts": 0,
+        "llm_calls": 1,
+        "duration_seconds": 0.407,
+        "successful_tools": []
+      },
+      "wall_time_seconds": 5.187,
+      "timed_out": false,
+      "capture_truncated": false,
+      "execution_error": null,
+      "diagnosis_path": "cases/ci-helm-validation.txt",
+      "trace_path": "cases/ci-helm-validation.trace.jsonl"
+    }
+  ]
+}

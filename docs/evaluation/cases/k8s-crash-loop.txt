@@ -1,0 +1,58 @@
+### Symptom
+
+The Kubernetes workload `orders-api` in namespace `staging` (specifically pod `orders-api-7dbf8655c5-n9trs`) is failing to start and is stuck in a `CrashLoopBackOff` state with 15 container restarts.
+
+### Evidence
+
+- Pod description (`describe_pod`) shows:
+  ```json
+  "container_statuses": [{
+    "name": "orders-api",
+    "ready": false,
+    "restart_count": 15,
+    "current_state": { "state": "Waiting", "reason": "CrashLoopBackOff" },
+    "last_state": { "state": "Terminated", "reason": "Error", "exit_code": 1 }
+  }]
+  ```
+- Previous container logs (`get_pod_logs` with `previous=true`) output:
+  ```text
+  ERROR: Required environment variable DATABASE_URL is not configured
+  INFO: Starting orders-api
+  INFO: Validating application configuration
+  ```
+
+### Root cause
+
+The application container fails immediately upon startup due to a missing required environment variable (`DATABASE_URL`).
+
+### Suggested fix
+
+Update the owning workload's declarative manifest (e.g., Deployment or Pod template) in `staging` to provide the required `DATABASE_URL` environment variable, preferably referencing a Kubernetes Secret rather than hardcoding credentials.
+
+Example YAML adjustment for the owning workload (Deployment):
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orders-api
+  namespace: staging
+spec:
+  template:
+    spec:
+      containers:
+        - name: orders-api
+          image: python:3.12-slim
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: <database-secret-name>  # Replace with actual secret name
+                  key: database-url             # Replace with actual secret key
+```
+
+Verify the fix after applying by checking pod readiness and logs (`kubectl rollout status deployment/orders-api -n staging`).
+
+### Confidence
+
+- High: Previous container logs explicitly state the missing environment variable (`DATABASE_URL`), and the container exits with code 1 consistently across 15 restarts.
